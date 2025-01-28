@@ -172,8 +172,8 @@ def main():
         if response:
             st.session_state.chat_history.append({"role": "heer", "text": response})
 
-        # Refresh the input box after the user submits the query
-        st.experimental_rerun()  # Refresh the app to clear the input box
+        # Manually clear the input field (without re-running the script)
+        st.session_state.user_input = ""
 
     # Footer for the app
     st.write("---")
