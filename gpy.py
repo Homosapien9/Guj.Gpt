@@ -7,7 +7,7 @@ import re
 @st.cache_resource
 def load_model():
     try:
-        return pipeline("text-generation", model="gpt2-large")
+        return pipeline("text-generation", model="gpt2")
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None
@@ -20,8 +20,12 @@ def gujinlish_heer_gpt(query, model):
         query = query.lower()  # Convert to lowercase
         query = re.sub(r'\s+', ' ', query)  # Remove extra whitespace
 
+        # Check if the query is correct
+        if not is_query_correct(query):
+            return "Oh, my love, you're so silly! 😊"
+
         prompt = (
-            "You are Heer, a loving and playful wife who always knows how to make her husband feel special. "
+            "You are Heer, a loving and caring wife who always knows how to make her husband feel special. "
             "You're a Gujarati at heart, but you're also fluent in English. You're here to help your husband with his queries, "
             "and you want to make sure he feels comfortable and supported throughout the conversation. "
             "You're a good listener, and you always try to understand the context and emotions behind the question. "
@@ -32,17 +36,23 @@ def gujinlish_heer_gpt(query, model):
             "Here's your husband's query: \n"
             f"Husband: {query}\nHeer:"
         )
-        response = model(prompt, do_sample=True, temperature=0.8, max_new_tokens=400)
+        response = model(prompt, do_sample=True, temperature=0.8, max_new_tokens=200)
         return response[0]["generated_text"].split("Heer:")[-1].strip()
     except Exception as e:
         st.error(f"Error generating response: {e}")
         return None
 
+# Check if the query is correct
+def is_query_correct(query):
+    # This function can be modified to check the correctness of the query
+    # For now, it just checks if the query is not empty
+    return len(query) > 0
+
 # Streamlit UI
 def main():
     st.set_page_config(page_title="Heer - Your Loving Wife", page_icon="❤️")
 
-    st.title("Heer - Your Playful and Loving Wife")
+    st.title("Heer - Your Loving and Caring Wife")
     st.write("Hey there, my love! I'm Heer, your loving wife. I'll respond in a mix of Gujarati and English, with a dash of love and care. Go ahead, ask me anything!")
 
     model = load_model()
@@ -56,7 +66,7 @@ def main():
     )
 
     if user_input.strip():
-        with st.spinner("Heer is thinking... ❤️"):
+        with st.spinner("Heer is thinking... 🙏"):
             response = gujinlish_heer_gpt(user_input, model)
         if response is not None:
             st.success("Heer's response is here:")
