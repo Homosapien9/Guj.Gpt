@@ -4,8 +4,8 @@ import re
 import random
 from datetime import datetime
 
-# Set up the Streamlit page configuration (must be first command in the script)
-st.set_page_config(page_title="Heer - Your Teenage, Flirty BFF", page_icon="❤️")
+# Set up the Streamlit page configuration (must be the first command)
+st.set_page_config(page_title="Heer - Your Loving Girlfriend", page_icon="❤️")
 
 # Load the model (simplified version without any advanced caching)
 @st.cache_resource
@@ -27,8 +27,8 @@ def get_time_of_day():
     else:
         return "night"
 
-# Generate a teenage-like loving, playful, and emotional response
-def generate_teenage_response(query, model):
+# Generate a loving, playful, and emotionally intelligent response with 90% English and 10% Gujarati
+def generate_girly_response(query, model):
     try:
         # Preprocess the query to handle basic issues
         query = re.sub(r'[^\w\s]', '', query)  # Remove punctuation
@@ -38,44 +38,50 @@ def generate_teenage_response(query, model):
         # Add personalized greeting based on the time of day
         time_of_day = get_time_of_day()
         if time_of_day == "morning":
-            greeting = "Good morning! 😴"
+            greeting = "Good morning, my love! ☀️"
         elif time_of_day == "afternoon":
-            greeting = "Heyyyy! What's up? 🌞"
+            greeting = "Heyyy! How’s your afternoon going? 🌞"
         else:
-            greeting = "Night, night! 🛏️ Don't forget to sleep... but... I'll miss you... 😜"
+            greeting = "Good night, darling! Sleep well. 😴"
 
-        # If the query is a greeting or casual, respond in a playful and casual way
+        # If the query is a greeting or casual, respond warmly
         if query in ["hey", "hi", "hello", "how are you", "what's up"]:
-            return f"{greeting} 😜 What's up? You look SO cute today, like seriously, I'm obsessed! 😍"
+            return f"{greeting} What's up? I’ve been thinking about you. 😘 Tum kai rite chho?"
 
-        # If the query is about "good night", respond in a cute, playful way
+        # If the query is about "good night", respond sweetly
         if "good night" in query:
-            return f"{greeting} 😘 Gonna dream about you all night... lucky me, right? 😈"
+            return f"Good night, love! Sweet dreams. 💖"
 
-        # If the query mentions missing or thinking of each other, respond emotionally
+        # If the query mentions missing or thinking of each other, respond with care
         if "miss you" in query or "thinking of you" in query:
-            return "You miss me? 😱 Awwww, I miss you too!! Like... a lot!! 💖 Why are you always on my mind?? 🥺💭"
+            return "Aww, you miss me? I miss you too... so much. 💖 Tame khub pyaara chho."
 
-        # If the query is a compliment, respond flirty and appreciative (teenage style)
+        # If the query expresses loneliness or sadness, respond with empathy
+        if "feel lonely" in query or "feeling down" in query:
+            return (
+                "Aww, I’m really sorry to hear that. 😥 You know I’m always here for you, okay? "
+                "Whenever you feel lonely, just know I'm thinking about you. 😊 Tumne kabhi akela feel nahi hona chahiye."
+            )
+
+        # If the query is about compliments or admiration, respond humbly
         if "beautiful" in query or "sexy" in query:
-            return "Stoppp!! 😳 You're gonna make me blush...! 💕 But seriously... you're EVERYTHING 😍🔥"
+            return "Aww, you're making me blush! 😳 But seriously, you're the most beautiful person ever. 🔥"
 
-        # If the query is about their day or something casual, respond playfully and with curiosity
+        # If the query is about their day or something casual, respond playfully
         if "how's your day" in query or "what are you doing" in query:
-            return "Oh... just scrolling through my phone, like always 🙄 But now that you're here, I’m WAY more interested 😏"
+            return "My day’s been great, just thinking about you. 💭 What’s up with you? Tumne kai karu chho?"
 
-        # Add emotional randomness for certain responses to simulate teenage-like behavior
+        # Add emotional randomness for thoughtful responses
         emotional_responses = [
-            "Ughhh, you’re making me so happy right now!! 😭💖",
-            "I just wanna spend EVERY second with you!! 😩💓",
-            "OMG, why are you so perfect? 😍 I can't even!! 😵",
-            "Why do I feel all warm and fuzzy inside when you talk to me? 🥺💖"
+            "You're the best part of my day, always making me smile. ☀️",
+            "I can’t stop thinking about you... You’re my favorite person. 💖",
+            "I just feel so lucky to have you. You make me so happy. ❤️"
         ]
         if random.random() < 0.1:  # 10% chance of a random emotional response
             return random.choice(emotional_responses)
 
-        # Default response (casual, playful)
-        return f"Like, you seriously just know how to make me smile!! 😏 Tell me more, I'm super curious!! 💬"
+        # Default response with a loving and warm vibe
+        return f"You're always on my mind... I love talking to you. 😘 Tell me more!"
 
     except Exception as e:
         st.error(f"Error generating response: {e}")
@@ -83,8 +89,8 @@ def generate_teenage_response(query, model):
 
 # Streamlit user interface
 def main():
-    st.title("Heer - Your Teenage, Flirty BFF")
-    st.write("Yo! I’m Heer, your super chill, super fun, and flirty teenage BFF. Let's chat! 😜💬")
+    st.title("Heer - Your Loving Girlfriend")
+    st.write("Hey, I’m Heer, your loving and playful girlfriend. Let’s chat and share some love! ❤️")
 
     # Load the model only once
     model = load_model()
@@ -97,8 +103,8 @@ def main():
 
     # Get user input
     user_input = st.text_area(
-        "What's up? Type your message here, and I'll reply with some fun vibes and a lotta love! 💖",
-        placeholder="Spill it! 🗣️",
+        "What's on your mind? Tell me anything, and I’ll respond with love and care. 💬",
+        placeholder="Type your message here...",
         key="user_input"
     )
 
@@ -107,9 +113,9 @@ def main():
         # Store the user's message in the session state
         st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
 
-        # Generate a human-like teenage response from Heer
+        # Generate a loving and thoughtful response from Heer
         with st.spinner("Heer is thinking... 🙃"):
-            response = generate_teenage_response(user_input, model)
+            response = generate_girly_response(user_input, model)
 
         # Store the generated response in the session state
         if response:
@@ -128,3 +134,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
