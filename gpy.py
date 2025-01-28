@@ -4,10 +4,14 @@ import re
 import random
 from datetime import datetime
 
+# Set up the Streamlit page configuration (this must be the first command)
+st.set_page_config(page_title="Heer - Your Loving and Flirty Wife", page_icon="❤️")
+
 # Load the model (simplified version without any advanced caching)
+@st.cache_resource
 def load_model():
     try:
-        # Load GPT-2 model for text generation, optimized for Streamlit Cloud
+        # Load GPT-2 model for text generation
         return pipeline("text-generation", model="gpt2")
     except Exception as e:
         st.error(f"Error loading model: {e}")
@@ -79,9 +83,6 @@ def generate_human_like_response(query, model):
 
 # Streamlit user interface
 def main():
-    # Set up the Streamlit page
-    st.set_page_config(page_title="Heer - Your Loving and Flirty Wife", page_icon="❤️")
-
     st.title("Heer - Your Loving and Flirty Wife")
     st.write("Hey, love! I’m Heer, your affectionate wife. Let’s talk, and I’ll make sure to sprinkle some love, flirty vibes, and even emotional responses in every reply. 💕")
 
@@ -98,8 +99,7 @@ def main():
     user_input = st.text_area(
         "What's on your mind, my love? Ask me anything, and I’ll respond with love, playful charm, and emotional vibes...",
         placeholder="Type your question here...",
-        key="user_input",
-        on_change=None  # Avoid rerun on text change
+        key="user_input"
     )
 
     # Handle user input and response generation
@@ -127,11 +127,6 @@ def main():
 
     # Footer for the app
     st.write("---")
-    st.write("Made with ❤️ by Jatan Shah")
-
-if __name__ == "__main__":
-    main()
-
     st.write("Made with ❤️ by Jatan Shah")
 
 if __name__ == "__main__":
