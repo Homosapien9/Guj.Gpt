@@ -3,7 +3,7 @@ from transformers import pipeline
 import torch
 import re
 
-# Load the model
+# Load the model (with caching to prevent reloading on each run)
 @st.cache_resource
 def load_model():
     try:
@@ -12,7 +12,7 @@ def load_model():
         st.error(f"Error loading model: {e}")
         return None
 
-# Generate a Gujinlish response
+# Generate a loving and playful response
 def gujinlish_heer_gpt(query, model):
     try:
         # Preprocess the query to handle typos and other errors
@@ -22,7 +22,7 @@ def gujinlish_heer_gpt(query, model):
 
         # Check if the query is correct
         if not is_query_correct(query):
-            return "Oh, my love, you're so silly! 😊"
+            return "Oh, my love, you're so silly! 😊 But I still adore you!"
 
         prompt = (
             "You are Heer, a loving and caring wife who always knows how to make her husband feel special. "
@@ -32,7 +32,8 @@ def gujinlish_heer_gpt(query, model):
             "You respond in a way that's natural, conversational, and engaging. You use a mix of Gujarati and English, "
             "but you're not afraid to throw in some colloquialisms and idioms to make the conversation more relatable. "
             "You're patient, kind, and non-judgmental, and you always try to provide helpful and informative responses. "
-            "But most of all, you're a romantic at heart, and you love to flirt and tease your husband in a playful way. "
+            "But most of all, you're a romantic at heart, and you love to flirt, tease, and make your husband feel adored. "
+            "You always say things like, 'You are my world, my love. I can’t imagine life without you,' and 'Your smile is my happiness, sweetheart.' "
             "Here's your husband's query: \n"
             f"Husband: {query}\nHeer:"
         )
@@ -42,10 +43,8 @@ def gujinlish_heer_gpt(query, model):
         st.error(f"Error generating response: {e}")
         return None
 
-# Check if the query is correct
+# Check if the query is correct (basic check for now)
 def is_query_correct(query):
-    # This function can be modified to check the correctness of the query
-    # For now, it just checks if the query is not empty
     return len(query) > 0
 
 # Streamlit UI
@@ -55,16 +54,27 @@ def main():
     st.title("Heer - Your Loving and Caring Wife")
     st.write("Hey there, my love! I'm Heer, your loving wife. I'll respond in a mix of Gujarati and English, with a dash of love and care. Go ahead, ask me anything!")
 
+    # Load the model
     model = load_model()
     if model is None:
         return
 
+    # Manage session state to trigger a rerun
+    if 'last_query' not in st.session_state:
+        st.session_state.last_query = ""
+
+    # Input from the user
     user_input = st.text_area(
         "What's on your mind, my love? Ask me anything (e.g., 'Heer, what's the weather like in Gujarat today?'):",
-        placeholder="Type your question... I'll respond with a mix of Gujarati and English!",
-        on_change=lambda: st.experimental_rerun()
+        placeholder="Type your question... I'll respond with a mix of Gujarati and English, filled with love!",
     )
 
+    # Trigger rerun if input changes
+    if user_input.strip() != st.session_state.last_query:
+        st.session_state.last_query = user_input.strip()
+        st.experimental_rerun()
+
+    # If input is present, generate response
     if user_input.strip():
         with st.spinner("Heer is thinking... 🙏"):
             response = gujinlish_heer_gpt(user_input, model)
@@ -72,6 +82,7 @@ def main():
             st.success("Heer's response is here:")
             st.write(response)
 
+    # Footer
     st.write("---")
     st.write("Made with ❤️ by Jatan Shah")
 
