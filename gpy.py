@@ -34,9 +34,9 @@ def generate_chat_response(query, model):
         # Default response structure
         time_of_day = get_time_of_day()
         if time_of_day == "morning":
-            greeting = "Good morning! How's your day going so far?"
+            greeting = "Good morning! How’s your day going so far?"
         elif time_of_day == "afternoon":
-            greeting = "Hey! How's your afternoon going? Anything exciting?"
+            greeting = "Hey! How’s your afternoon going? Anything exciting?"
         else:
             greeting = "Good night! Hope you had a nice day."
 
@@ -99,28 +99,32 @@ def main():
         # Clear input box after sending
         st.session_state.user_input = ""
 
-    # Display the chat history in the UI
+    # Apply dark theme styling via markdown
     st.markdown("""
         <style>
+            body {
+                background-color: #121212;  /* Very dark background */
+                color: white;
+            }
             .chat-container {
                 max-width: 700px;
                 margin: 0 auto;
                 padding: 15px;
-                background-color: #f8f9fa;
+                background-color: #1f1f1f;  /* Dark grey */
                 border-radius: 10px;
                 height: 400px;
                 overflow-y: scroll;
                 margin-bottom: 20px;
             }
             .user-msg {
-                background-color: #d1f7c4;
+                background-color: #3e8e41;  /* Greenish tone */
                 border-radius: 10px;
                 padding: 10px;
                 margin-bottom: 10px;
                 align-self: flex-start;
             }
             .heer-msg {
-                background-color: #ffcccb;
+                background-color: #e91e63;  /* Pinkish tone */
                 border-radius: 10px;
                 padding: 10px;
                 margin-bottom: 10px;
@@ -129,7 +133,7 @@ def main():
             .input-box {
                 width: 100%;
                 padding: 10px;
-                background-color: #e9ecef;
+                background-color: #303030;  /* Dark background for input box */
                 border-radius: 30px;
                 display: flex;
                 justify-content: space-between;
@@ -137,13 +141,14 @@ def main():
             }
             .input-text {
                 border: none;
-                background-color: #e9ecef;
+                background-color: #303030;
+                color: white;
                 width: 80%;
                 border-radius: 25px;
                 padding: 10px;
             }
             .send-button {
-                background-color: #ff6b6b;
+                background-color: #ff6b6b;  /* Red button */
                 color: white;
                 padding: 10px 20px;
                 border-radius: 25px;
