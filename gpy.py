@@ -1,12 +1,11 @@
 import streamlit as st
 from transformers import pipeline
-import random
 from datetime import datetime
 
-# Set up the Streamlit page configuration (must be the first command)
-st.set_page_config(page_title="Heer - Your Loving Girlfriend", page_icon="❤️")
+# Set up Streamlit page config
+st.set_page_config(page_title="Heer - Your Caring Girlfriend", page_icon="❤️")
 
-# Load the model (simplified version without any advanced caching)
+# Load the GPT model using transformers
 @st.cache_resource
 def load_model():
     try:
@@ -16,7 +15,7 @@ def load_model():
         st.error(f"Error loading model: {e}")
         return None
 
-# Helper function to determine the time of day
+# Helper function to determine time of day
 def get_time_of_day():
     current_hour = datetime.now().hour
     if current_hour < 12:
@@ -26,73 +25,89 @@ def get_time_of_day():
     else:
         return "night"
 
-# Generate a more realistic, loving, and balanced response
-def generate_girly_response(query, model):
+# Generate a thoughtful, neutral response like ChatGPT
+def generate_chat_response(query, model):
     try:
-        # Preprocess the query to handle basic issues
-        query = query.lower()  # Convert to lowercase
+        # Preprocess the query
+        query = query.lower()
 
-        # Add personalized greeting based on the time of day
+        # Default response structure
         time_of_day = get_time_of_day()
         if time_of_day == "morning":
-            greeting = "Good morning! I hope you're having a great start to your day."
+            greeting = "Good morning! How's your day going so far?"
         elif time_of_day == "afternoon":
-            greeting = "Hey there! How’s your afternoon going?"
+            greeting = "Hey! How's your afternoon going? Anything exciting?"
         else:
-            greeting = "Good night! I hope you had a good day."
+            greeting = "Good night! Hope you had a nice day."
 
-        # If the query is a greeting or casual, respond warmly and naturally
-        if query in ["hey", "hi", "hello", "how are you", "what's up"]:
-            return f"{greeting} I'm here if you want to talk. 😊"
+        # Check for user queries and give appropriate responses
+        if "hi" in query or "hello" in query:
+            return f"{greeting} I'm happy you're here. How are you feeling today?"
 
-        # If the query is about "good night", respond sweetly but not too flirty
+        if "how are you" in query:
+            return "I'm doing well, thank you for asking. How about you? How's everything going?"
+
+        if "sad" in query or "lonely" in query:
+            return "I'm really sorry you're feeling that way. It's okay to feel sad sometimes, but you're not alone. I'm here for you."
+
         if "good night" in query:
-            return f"Good night! Hope you sleep well and have sweet dreams."
+            return "Good night! I hope you sleep well and feel refreshed in the morning."
 
-        # If the query mentions missing or thinking of each other, respond with care
-        if "miss you" in query or "thinking of you" in query:
-            return "I miss you too. It's always nice to hear from you. Take care. 💖"
+        if "miss you" in query:
+            return "I miss you too. You're always in my thoughts."
 
-        # If the query expresses loneliness or sadness, respond with empathy
-        if "feel lonely" in query or "feeling down" in query:
-            return (
-                "I'm really sorry you're feeling that way. It's okay to feel sad sometimes. "
-                "Just remember you're not alone, and I'm always here if you need someone to talk to. 💖"
-            )
+        if "how's your day" in query:
+            return "My day has been okay. It's been pretty calm. How about yours? Anything interesting happen today?"
 
-        # If the query expresses mood swings, respond accordingly with understanding
-        if "angry" in query or "frustrated" in query:
-            return "I totally get how you feel. Sometimes things can be really frustrating, but you're strong. You'll get through this."
+        if "feeling down" in query or "not okay" in query:
+            return "I understand. It's okay to feel like that sometimes. Want to talk about what’s going on? I’m here to listen."
 
-        if "sad" in query or "upset" in query:
-            return "I'm sorry you're feeling like this. It’s okay to feel sad, but remember, things will get better. You're not alone."
-
-        # If the query is about compliments or admiration, respond in a humble and friendly way
-        if "beautiful" in query or "pretty" in query:
-            return "Aww, you're so kind! But it's you who brightens my day. 😊"
-
-        # If the query is about their day or something casual, respond thoughtfully
-        if "how's your day" in query or "what are you doing" in query:
-            return "My day’s going fine, just thinking about how you're doing. What about you?"
-
-        # Default response with a supportive and friendly vibe
-        return f"You're doing great. Let me know how I can make your day even better! 😊"
+        # Default chat response for any other queries
+        return f"You're doing great! How about we chat more? 😊 Let me know what's on your mind."
 
     except Exception as e:
         st.error(f"Error generating response: {e}")
-        return None
+        return "Oops! Something went wrong."
 
-# Streamlit user interface
+# Set up the chat UI and interactions
 def main():
-    # Set up custom styles for the chat UI
+    # Load the model
+    model = load_model()
+    if model is None:
+        return
+
+    # Manage session state for chat history
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+
+    # Input from the user (message box)
+    user_input = st.text_input("Type your message...", key="user_input", placeholder="Ask me anything!")
+
+    # Send button action
+    if st.button("Send") and user_input.strip():
+        # Store the user's message in the chat history
+        st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
+
+        # Generate a response from the model
+        with st.spinner("Heer is thinking..."):
+            response = generate_chat_response(user_input, model)
+
+        # Store the response in the chat history
+        if response:
+            st.session_state.chat_history.append({"role": "heer", "text": response})
+
+        # Clear input box after sending
+        st.session_state.user_input = ""
+
+    # Display the chat history in the UI
     st.markdown("""
         <style>
-            .chat-box {
-                max-width: 600px;
+            .chat-container {
+                max-width: 700px;
                 margin: 0 auto;
-                padding: 10px;
+                padding: 15px;
                 background-color: #f8f9fa;
-                border-radius: 8px;
+                border-radius: 10px;
                 height: 400px;
                 overflow-y: scroll;
                 margin-bottom: 20px;
@@ -101,14 +116,14 @@ def main():
                 background-color: #d1f7c4;
                 border-radius: 10px;
                 padding: 10px;
-                margin-bottom: 5px;
+                margin-bottom: 10px;
                 align-self: flex-start;
             }
             .heer-msg {
                 background-color: #ffcccb;
                 border-radius: 10px;
                 padding: 10px;
-                margin-bottom: 5px;
+                margin-bottom: 10px;
                 align-self: flex-end;
             }
             .input-box {
@@ -123,7 +138,7 @@ def main():
             .input-text {
                 border: none;
                 background-color: #e9ecef;
-                width: 90%;
+                width: 80%;
                 border-radius: 25px;
                 padding: 10px;
             }
@@ -138,47 +153,22 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    # Set up Streamlit title and introduction
-    st.title("Heer - Your Loving Girlfriend")
-    st.write("Hey! I'm Heer, here to chat and keep you company. How’s your day going? 😊")
+    # Display the chat container with messages
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    for message in st.session_state.chat_history:
+        if message["role"] == "user":
+            st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="heer-msg">{message["text"]}</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Load the model only once
-    model = load_model()
-    if model is None:
-        return
-
-    # Manage session state for chat history
-    if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
-
-    # Input from the user (just one input field)
-    user_input = st.text_input("Type your message...", key="user_input", placeholder="Type here...")
-
-    # Button to send message
-    if st.button("Send") and user_input.strip():
-        # Store the user's message in the session state
-        st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
-
-        # Generate a loving and thoughtful response from Heer
-        with st.spinner("Heer is thinking... 🙃"):
-            response = generate_girly_response(user_input, model)
-
-        # Store the generated response in the session state
-        if response:
-            st.session_state.chat_history.append({"role": "heer", "text": response})
-
-        # Clear input box after sending
-        st.session_state.user_input = ""
-
-    # Display the conversation history (messages stacked upwards)
-    chat_box = st.container()
-    with chat_box:
-        chat_box = st.empty()
-        for message in st.session_state.chat_history:
-            if message["role"] == "user":
-                st.markdown(f'<div class="chat-box"><div class="user-msg">{message["text"]}</div></div>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<div class="chat-box"><div class="heer-msg">{message["text"]}</div></div>', unsafe_allow_html=True)
+    # Input box with the send button
+    st.markdown("""
+        <div class="input-box">
+            <input type="text" class="input-text" id="user_input" placeholder="Ask me anything..."/>
+            <button class="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    """, unsafe_allow_html=True)
 
     # Footer for the app
     st.write("---")
