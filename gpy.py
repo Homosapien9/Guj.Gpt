@@ -20,6 +20,10 @@ def gujinlish_heer_gpt(query, model):
         query = query.lower()  # Convert to lowercase
         query = re.sub(r'\s+', ' ', query)  # Remove extra whitespace
 
+        # If the query is just a greeting or a simple "Hey", respond lovingly
+        if query in ["hey", "hi", "hello", "how are you", "what's up", "howdy"]:
+            return "Hey my love! 😊 How are you today? You know, just thinking about you makes my heart skip a beat! 💖"
+
         # Check if the query is correct
         if not is_query_correct(query):
             return "Oh, my love, you're so silly! 😊 But I still adore you!"
@@ -59,7 +63,7 @@ def main():
     if model is None:
         return
 
-    # Manage session state to trigger a rerun
+    # Manage session state for input tracking
     if 'last_query' not in st.session_state:
         st.session_state.last_query = ""
 
@@ -69,10 +73,9 @@ def main():
         placeholder="Type your question... I'll respond with a mix of Gujarati and English, filled with love!",
     )
 
-    # Trigger rerun if input changes
+    # If input is present and different from last input, update session state and generate response
     if user_input.strip() != st.session_state.last_query:
         st.session_state.last_query = user_input.strip()
-        st.experimental_rerun()
 
     # If input is present, generate response
     if user_input.strip():
