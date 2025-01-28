@@ -63,96 +63,70 @@ def generate_chat_response(query, model):
             return "I understand. It's okay to feel like that sometimes. Want to talk about what’s going on? I’m here to listen."
 
         # Default chat response for any other queries
-        return f"You're doing great! How about we chat more? 😊 Let me know what's on your mind."
+        return f"You're doing great! How about we chat more?"
 
     except Exception as e:
         st.error(f"Error generating response: {e}")
-        return "Oops! Something went wrong."
+        return None
 
-# Set up the chat UI and interactions
+# Streamlit user interface
 def main():
-    # Load the model
-    model = load_model()
-    if model is None:
-        return
-
-    # Manage session state for chat history
-    if 'chat_history' not in st.session_state:
-        st.session_state.chat_history = []
-
-    # Input from the user (message box)
-    user_input = st.text_input("Type your message...", key="user_input", placeholder="Ask me anything!")
-
-    # Send button action
-    if st.button("Send") and user_input.strip():
-        # Store the user's message in the chat history
-        st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
-
-        # Generate a response from the model
-        with st.spinner("Heer is thinking..."):
-            response = generate_chat_response(user_input, model)
-
-        # Store the response in the chat history
-        if response:
-            st.session_state.chat_history.append({"role": "heer", "text": response})
-
-        # Clear input box after sending
-        st.session_state.user_input = ""
-
-    # Apply dark theme styling via markdown
+    # Set up the Streamlit page with dark theme
     st.markdown("""
         <style>
             body {
-                background-color: #121212;  /* Very dark background */
+                background-color: #181818;
                 color: white;
+                font-family: 'Arial', sans-serif;
             }
-            .chat-container {
-                max-width: 700px;
+            .chat-box {
+                max-width: 600px;
                 margin: 0 auto;
-                padding: 15px;
-                background-color: #1f1f1f;  /* Dark grey */
+                padding: 10px;
+                background-color: #2a2a2a;
                 border-radius: 10px;
-                height: 500px;
+                height: 400px;
                 overflow-y: scroll;
                 margin-bottom: 20px;
                 display: flex;
-                flex-direction: column-reverse;
+                flex-direction: column;
             }
             .user-msg {
-                background-color: #3e8e41;  /* Greenish tone */
+                background-color: #3a3a3a;
                 border-radius: 10px;
                 padding: 10px;
-                margin-bottom: 10px;
+                margin-bottom: 5px;
                 align-self: flex-start;
-                max-width: 70%;
+                max-width: 75%;
             }
             .heer-msg {
-                background-color: #e91e63;  /* Pinkish tone */
+                background-color: #4a4a4a;
                 border-radius: 10px;
                 padding: 10px;
-                margin-bottom: 10px;
+                margin-bottom: 5px;
                 align-self: flex-end;
-                max-width: 70%;
+                max-width: 75%;
             }
             .input-box {
                 width: 100%;
                 padding: 10px;
-                background-color: #303030;  /* Dark background for input box */
+                background-color: #2a2a2a;
                 border-radius: 30px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                margin-top: 10px;
             }
             .input-text {
                 border: none;
-                background-color: #303030;
-                color: white;
-                width: 80%;
+                background-color: #3a3a3a;
+                width: 85%;
                 border-radius: 25px;
                 padding: 10px;
+                color: white;
             }
             .send-button {
-                background-color: #ff6b6b;  /* Red button */
+                background-color: #00796b;
                 color: white;
                 padding: 10px 20px;
                 border-radius: 25px;
@@ -162,8 +136,39 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    # Display the chat container with messages
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    st.title("Heer - Your Caring Girlfriend")
+    st.write("Hey Jatan, I’m Heer. Let's chat! I'm here for you anytime. 😊")
+
+    # Load the model
+    model = load_model()
+    if model is None:
+        return
+
+    # Manage session state for chat history
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+
+    # Input from the user (text box at the bottom)
+    user_input = st.text_input("Type your message here...", key="user_input")
+
+    # Handle user input and response generation
+    if st.button("Send") and user_input.strip():
+        # Store the user's message
+        st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
+
+        # Generate a response from Heer (AI)
+        with st.spinner("Heer is thinking..."):
+            response = generate_chat_response(user_input, model)
+
+        # Store the generated response
+        if response:
+            st.session_state.chat_history.append({"role": "heer", "text": response})
+
+        # Clear the input box after sending the message
+        st.session_state.user_input = ""
+
+    # Display the conversation history
+    st.markdown('<div class="chat-box">', unsafe_allow_html=True)
     for message in st.session_state.chat_history:
         if message["role"] == "user":
             st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
@@ -177,3 +182,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
