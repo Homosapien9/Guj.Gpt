@@ -1,6 +1,3 @@
-datetime
-streamlit
-transformers
-pipeline
-torch
-random
+streamlit==1.21.0
+transformers==4.29.1
+torch==2.1.0
