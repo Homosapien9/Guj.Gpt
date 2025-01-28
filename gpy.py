@@ -27,7 +27,7 @@ def get_time_of_day():
     else:
         return "night"
 
-# Generate a loving, playful, and emotionally intelligent response with 90% English and 10% Gujarati
+# Generate a loving, playful, and emotionally intelligent response with 100% English
 def generate_girly_response(query, model):
     try:
         # Preprocess the query to handle basic issues
@@ -38,50 +38,61 @@ def generate_girly_response(query, model):
         # Add personalized greeting based on the time of day
         time_of_day = get_time_of_day()
         if time_of_day == "morning":
-            greeting = "Good morning, my love! ☀️"
+            greeting = "Good morning, my love! ☀️ How did you sleep?"
         elif time_of_day == "afternoon":
-            greeting = "Heyyy! How’s your afternoon going? 🌞"
+            greeting = "Hey, how’s your afternoon going? 🌞"
         else:
-            greeting = "Good night, darling! Sleep well. 😴"
+            greeting = "Good night, darling! Sleep tight. 😴"
 
         # If the query is a greeting or casual, respond warmly
         if query in ["hey", "hi", "hello", "how are you", "what's up"]:
-            return f"{greeting} What's up? I’ve been thinking about you. 😘 Tum kai rite chho?"
+            return f"{greeting} What's on your mind today? I'm here to listen. 😊"
 
         # If the query is about "good night", respond sweetly
         if "good night" in query:
-            return f"Good night, love! Sweet dreams. 💖"
+            return f"Good night, love! Wishing you peaceful dreams. 💤 See you tomorrow!"
 
         # If the query mentions missing or thinking of each other, respond with care
         if "miss you" in query or "thinking of you" in query:
-            return "Aww, you miss me? I miss you too... so much. 💖 Tame khub pyaara chho."
+            return "I miss you too. It's always nice to hear from you. Take care, okay? 💖"
 
         # If the query expresses loneliness or sadness, respond with empathy
         if "feel lonely" in query or "feeling down" in query:
             return (
-                "Aww, I’m really sorry to hear that. 😥 You know I’m always here for you, okay? "
-                "Whenever you feel lonely, just know I'm thinking about you. 😊 Tumne kabhi akela feel nahi hona chahiye."
+                "I’m really sorry you're feeling that way. 😔 It’s okay to feel down sometimes. "
+                "Just know you’re not alone, and I’m always here if you need someone to talk to. 💖"
             )
 
-        # If the query is about compliments or admiration, respond humbly
-        if "beautiful" in query or "sexy" in query:
-            return "Aww, you're making me blush! 😳 But seriously, you're the most beautiful person ever. 🔥"
+        # If the query expresses mood swings, respond accordingly
+        if "angry" in query or "frustrated" in query:
+            return (
+                "I get it... Sometimes life can be so frustrating. 😤 But hey, you’re strong and you’ll get through this, okay?"
+            )
+        if "sad" in query or "upset" in query:
+            return (
+                "Aw, I’m sorry you’re feeling down. 😔 But it’s okay, everyone has those days. I’m here for you. 💖"
+            )
 
-        # If the query is about their day or something casual, respond playfully
+        # If the query is about compliments or admiration, respond humbly and sweetly
+        if "beautiful" in query or "pretty" in query:
+            return "Thank you, you’re so sweet! But honestly, it’s you who makes everything better. 😊"
+
+        # If the query is about their day or something casual, respond thoughtfully
         if "how's your day" in query or "what are you doing" in query:
-            return "My day’s been great, just thinking about you. 💭 What’s up with you? Tumne kai karu chho?"
+            return "My day’s going well, just thinking about you. How about yours? What did you do today?"
 
-        # Add emotional randomness for thoughtful responses
+        # Add random supportive responses that are thoughtful
         emotional_responses = [
-            "You're the best part of my day, always making me smile. ☀️",
-            "I can’t stop thinking about you... You’re my favorite person. 💖",
-            "I just feel so lucky to have you. You make me so happy. ❤️"
+            "You’re such a wonderful person, and I’m so lucky to have you in my life. 💕",
+            "I hope you know how much you mean to me. You make my world brighter. 🌟",
+            "You’re strong and amazing, even on the tough days. I’m proud of you. 💖",
+            "Whenever you need to talk, I’m always here. I’ve got your back. 😊"
         ]
         if random.random() < 0.1:  # 10% chance of a random emotional response
             return random.choice(emotional_responses)
 
-        # Default response with a loving and warm vibe
-        return f"You're always on my mind... I love talking to you. 😘 Tell me more!"
+        # Default response with a loving and supportive vibe
+        return f"You’re such a great person. I’m always happy to chat with you. 😊 Tell me more about how you’re doing!"
 
     except Exception as e:
         st.error(f"Error generating response: {e}")
@@ -89,8 +100,62 @@ def generate_girly_response(query, model):
 
 # Streamlit user interface
 def main():
+    # Set the background style to give a WhatsApp-like feel
+    st.markdown("""
+        <style>
+            .chat-box {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 10px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                height: 400px;
+                overflow-y: scroll;
+                margin-bottom: 20px;
+            }
+            .user-msg {
+                background-color: #d1f7c4;
+                border-radius: 10px;
+                padding: 10px;
+                margin-bottom: 5px;
+                align-self: flex-start;
+            }
+            .heer-msg {
+                background-color: #ffcccb;
+                border-radius: 10px;
+                padding: 10px;
+                margin-bottom: 5px;
+                align-self: flex-end;
+            }
+            .input-box {
+                width: 100%;
+                padding: 10px;
+                background-color: #e9ecef;
+                border-radius: 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .input-text {
+                border: none;
+                background-color: #e9ecef;
+                width: 90%;
+                border-radius: 25px;
+                padding: 10px;
+            }
+            .send-button {
+                background-color: #ff6b6b;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 25px;
+                border: none;
+                cursor: pointer;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.title("Heer - Your Loving Girlfriend")
-    st.write("Hey, I’m Heer, your loving and playful girlfriend. Let’s chat and share some love! ❤️")
+    st.write("Hey, I’m Heer! I’m here to chat with you, share love, and make your day brighter. ❤️")
 
     # Load the model only once
     model = load_model()
@@ -101,14 +166,9 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
-    # Get user input
-    user_input = st.text_area(
-        "What's on your mind? Tell me anything, and I’ll respond with love and care. 💬",
-        placeholder="Type your message here...",
-        key="user_input"
-    )
-
     # Handle user input and response generation
+    user_input = st.text_input("Type here...", key="user_input")
+
     if st.button("Send") and user_input.strip():
         # Store the user's message in the session state
         st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
@@ -121,12 +181,25 @@ def main():
         if response:
             st.session_state.chat_history.append({"role": "heer", "text": response})
 
-    # Display the conversation history
+        # Clear input box
+        st.session_state.user_input = ""
+
+    # Display the conversation history with WhatsApp-like bubble design
+    st.markdown('<div class="chat-box">', unsafe_allow_html=True)
     for message in st.session_state.chat_history:
         if message["role"] == "user":
-            st.write(f"**You:** {message['text']}")
+            st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
         else:
-            st.write(f"**Heer:** {message['text']}")
+            st.markdown(f'<div class="heer-msg">{message["text"]}</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Input and send button at the bottom
+    st.markdown("""
+        <div class="input-box">
+            <input class="input-text" type="text" placeholder="Type your message..." id="user_input" value="">
+            <button class="send-button">Send</button>
+        </div>
+    """, unsafe_allow_html=True)
 
     # Footer for the app
     st.write("---")
@@ -134,4 +207,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
