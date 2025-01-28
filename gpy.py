@@ -1,12 +1,12 @@
 import streamlit as st
 from transformers import pipeline
-import torch
 import re
 
 # Load the model (with caching to prevent reloading on each run)
-@st.cache_resource
+@st.experimental_singleton
 def load_model():
     try:
+        # Load GPT2 using Hugging Face's pipeline
         return pipeline("text-generation", model="gpt2")
     except Exception as e:
         st.error(f"Error loading model: {e}")
@@ -57,8 +57,11 @@ def gujinlish_heer_gpt(query, model):
             "Here's your husband's query: \n"
             f"Husband: {query}\nHeer:"
         )
+        
+        # Generate a response using the GPT-2 model
         response = model(prompt, do_sample=True, temperature=0.8, max_new_tokens=200)
         return response[0]["generated_text"].split("Heer:")[-1].strip()
+
     except Exception as e:
         st.error(f"Error generating response: {e}")
         return None
