@@ -148,11 +148,19 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
-    # Input from the user (text box at the bottom)
-    user_input = st.text_input("Type your message here...", key="user_input")
+    # Display the conversation history
+    st.markdown('<div class="chat-box">', unsafe_allow_html=True)
+    for message in st.session_state.chat_history:
+        if message["role"] == "user":
+            st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="heer-msg">{message["text"]}</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Handle user input and response generation
-    if st.button("Send") and user_input.strip():
+    # Input from the user (text box at the bottom)
+    user_input = st.text_input("Type your message here...")
+
+    if user_input.strip():
         # Store the user's message
         st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
 
@@ -164,17 +172,8 @@ def main():
         if response:
             st.session_state.chat_history.append({"role": "heer", "text": response})
 
-        # Clear the input box after sending the message
-        st.session_state.user_input = ""
-
-    # Display the conversation history
-    st.markdown('<div class="chat-box">', unsafe_allow_html=True)
-    for message in st.session_state.chat_history:
-        if message["role"] == "user":
-            st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="heer-msg">{message["text"]}</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Refresh the input box after the user submits the query
+        st.experimental_rerun()  # Refresh the app to clear the input box
 
     # Footer for the app
     st.write("---")
@@ -182,4 +181,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
