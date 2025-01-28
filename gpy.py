@@ -167,14 +167,6 @@ def main():
             st.markdown(f'<div class="heer-msg">{message["text"]}</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Input box with the send button
-    st.markdown("""
-        <div class="input-box">
-            <input type="text" class="input-text" id="user_input" placeholder="Ask me anything..."/>
-            <button class="send-button" onclick="sendMessage()">Send</button>
-        </div>
-    """, unsafe_allow_html=True)
-
     # Footer for the app
     st.write("---")
     st.write("Made with ❤️ by Jatan Shah")
