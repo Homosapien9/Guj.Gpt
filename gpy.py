@@ -1,6 +1,5 @@
 import streamlit as st
 from transformers import pipeline
-import re
 import random
 from datetime import datetime
 
@@ -31,9 +30,7 @@ def get_time_of_day():
 def generate_girly_response(query, model):
     try:
         # Preprocess the query to handle basic issues
-        query = re.sub(r'[^\w\s]', '', query)  # Remove punctuation
         query = query.lower()  # Convert to lowercase
-        query = re.sub(r'\s+', ' ', query)  # Remove extra whitespace
 
         # Add personalized greeting based on the time of day
         time_of_day = get_time_of_day()
@@ -100,60 +97,7 @@ def generate_girly_response(query, model):
 
 # Streamlit user interface
 def main():
-    # Set the background style to give a WhatsApp-like feel
-    st.markdown("""
-        <style>
-            .chat-box {
-                max-width: 600px;
-                margin: 0 auto;
-                padding: 10px;
-                background-color: #f8f9fa;
-                border-radius: 8px;
-                height: 400px;
-                overflow-y: scroll;
-                margin-bottom: 20px;
-            }
-            .user-msg {
-                background-color: #d1f7c4;
-                border-radius: 10px;
-                padding: 10px;
-                margin-bottom: 5px;
-                align-self: flex-start;
-            }
-            .heer-msg {
-                background-color: #ffcccb;
-                border-radius: 10px;
-                padding: 10px;
-                margin-bottom: 5px;
-                align-self: flex-end;
-            }
-            .input-box {
-                width: 100%;
-                padding: 10px;
-                background-color: #e9ecef;
-                border-radius: 30px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .input-text {
-                border: none;
-                background-color: #e9ecef;
-                width: 90%;
-                border-radius: 25px;
-                padding: 10px;
-            }
-            .send-button {
-                background-color: #ff6b6b;
-                color: white;
-                padding: 10px 20px;
-                border-radius: 25px;
-                border: none;
-                cursor: pointer;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
+    # Set up simple chatbox UI with no extra colors
     st.title("Heer - Your Loving Girlfriend")
     st.write("Hey, I’m Heer! I’m here to chat with you, share love, and make your day brighter. ❤️")
 
@@ -166,9 +110,10 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
-    # Handle user input and response generation
+    # Input from the user
     user_input = st.text_input("Type here...", key="user_input")
 
+    # Button to send message
     if st.button("Send") and user_input.strip():
         # Store the user's message in the session state
         st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
@@ -181,25 +126,15 @@ def main():
         if response:
             st.session_state.chat_history.append({"role": "heer", "text": response})
 
-        # Clear input box
+        # Clear input box after sending
         st.session_state.user_input = ""
 
-    # Display the conversation history with WhatsApp-like bubble design
-    st.markdown('<div class="chat-box">', unsafe_allow_html=True)
+    # Display the conversation history (messages stacked upwards)
     for message in st.session_state.chat_history:
         if message["role"] == "user":
-            st.markdown(f'<div class="user-msg">{message["text"]}</div>', unsafe_allow_html=True)
+            st.write(f"**You:** {message['text']}")
         else:
-            st.markdown(f'<div class="heer-msg">{message["text"]}</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Input and send button at the bottom
-    st.markdown("""
-        <div class="input-box">
-            <input class="input-text" type="text" placeholder="Type your message..." id="user_input" value="">
-            <button class="send-button">Send</button>
-        </div>
-    """, unsafe_allow_html=True)
+            st.write(f"**Heer:** {message['text']}")
 
     # Footer for the app
     st.write("---")
