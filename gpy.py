@@ -12,7 +12,7 @@ def load_model():
         st.error(f"Error loading model: {e}")
         return None
 
-# Generate a loving and playful response
+# Generate a cheeky and playful response
 def gujinlish_heer_gpt(query, model):
     try:
         # Preprocess the query to handle typos and other errors
@@ -20,13 +20,29 @@ def gujinlish_heer_gpt(query, model):
         query = query.lower()  # Convert to lowercase
         query = re.sub(r'\s+', ' ', query)  # Remove extra whitespace
 
-        # If the query is just a greeting or a simple "Hey", respond lovingly
+        # If the query is just a greeting or a simple "Hey", respond with playful affection
         if query in ["hey", "hi", "hello", "how are you", "what's up", "howdy"]:
-            return "Hey my love! 😊 How are you today? You know, just thinking about you makes my heart skip a beat! 💖"
+            return "Well, hello there... 😏 Feeling lucky today? 😉 What’s on your mind, handsome?"
+
+        # If the query is playful, respond with some cheeky comments
+        if "good night" in query:
+            return "Good night, my love... 💋 Don’t forget, I’ll be waiting for you in my dreams... 😈"
+
+        # If the query is asking about missing or thinking of each other, respond flirty
+        if "miss you" in query or "thinking of you" in query:
+            return "You miss me? Mmm, I’m definitely thinking about you too... 😏 Maybe a little too much... ❤️"
+
+        # If the query is more about appearance or a compliment, keep it cheeky and flirty
+        if "beautiful" in query or "sexy" in query:
+            return "Stop it... You’re making me blush! 😳 But I’ve seen you look way hotter in my dreams...🔥"
+
+        # If it's about the user's day or something casual
+        if "how's your day" in query or "what are you doing" in query:
+            return "Oh, just thinking about you, as usual... 💭 Can’t seem to focus on anything else... 😉"
 
         # Check if the query is correct
         if not is_query_correct(query):
-            return "Oh, my love, you're so silly! 😊 But I still adore you!"
+            return "Oh, you’re just being silly now, but I love it. Keep going, handsome. 😘"
 
         prompt = (
             "You are Heer, a loving and caring wife who always knows how to make her husband feel special. "
@@ -63,27 +79,39 @@ def main():
     if model is None:
         return
 
-    # Manage session state for input tracking
-    if 'last_query' not in st.session_state:
-        st.session_state.last_query = ""
+    # Manage session state for input tracking and chat history
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
 
     # Input from the user
     user_input = st.text_area(
         "What's on your mind, my love? Ask me anything (e.g., 'Heer, what's the weather like in Gujarat today?'):",
         placeholder="Type your question... I'll respond with a mix of Gujarati and English, filled with love!",
+        key="user_input"
     )
 
-    # If input is present and different from last input, update session state and generate response
-    if user_input.strip() != st.session_state.last_query:
-        st.session_state.last_query = user_input.strip()
+    # Submit button to send query
+    if st.button("Send") and user_input.strip():
+        # Store the conversation
+        st.session_state.chat_history.append({"role": "user", "text": user_input.strip()})
 
-    # If input is present, generate response
-    if user_input.strip():
+        # Generate a response from Heer
         with st.spinner("Heer is thinking... 🙏"):
             response = gujinlish_heer_gpt(user_input, model)
-        if response is not None:
-            st.success("Heer's response is here:")
-            st.write(response)
+
+        # Store the AI's response
+        if response:
+            st.session_state.chat_history.append({"role": "heer", "text": response})
+
+        # Clear the input field after sending the message
+        st.session_state.user_input = ""
+
+    # Display the conversation (chat history)
+    for message in st.session_state.chat_history:
+        if message["role"] == "user":
+            st.write(f"**You:** {message['text']}")
+        else:
+            st.write(f"**Heer:** {message['text']}")
 
     # Footer
     st.write("---")
