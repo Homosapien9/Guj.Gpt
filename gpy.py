@@ -3,7 +3,7 @@ from transformers import pipeline
 from datetime import datetime
 
 # Set up Streamlit page config
-st.set_page_config(page_title="Heer - Your Caring Girlfriend", page_icon="❤️")
+st.set_page_config(page_title="Heer - Your Caring Girlfriend", page_icon="❤️", layout="wide")
 
 # Load the GPT model using transformers
 @st.cache_resource
@@ -112,9 +112,11 @@ def main():
                 padding: 15px;
                 background-color: #1f1f1f;  /* Dark grey */
                 border-radius: 10px;
-                height: 400px;
+                height: 500px;
                 overflow-y: scroll;
                 margin-bottom: 20px;
+                display: flex;
+                flex-direction: column-reverse;
             }
             .user-msg {
                 background-color: #3e8e41;  /* Greenish tone */
@@ -122,6 +124,7 @@ def main():
                 padding: 10px;
                 margin-bottom: 10px;
                 align-self: flex-start;
+                max-width: 70%;
             }
             .heer-msg {
                 background-color: #e91e63;  /* Pinkish tone */
@@ -129,6 +132,7 @@ def main():
                 padding: 10px;
                 margin-bottom: 10px;
                 align-self: flex-end;
+                max-width: 70%;
             }
             .input-box {
                 width: 100%;
