@@ -1,22 +1,21 @@
-import random
-import time
-import requests
-from datetime import datetime
 import streamlit as st
-from transformers import pipeline
+from transformers import pipeline, GPTNeoForCausalLM, AutoTokenizer
+from datetime import datetime
 
 # Set up Streamlit page config
 st.set_page_config(page_title="Heer - Your Caring Girlfriend", page_icon="❤️", layout="wide")
 
-# Load the GPT model using transformers
+# Load GPT-Neo 1.3B model and tokenizer
 @st.cache_resource
 def load_model():
     try:
-        # Load GPT-2 model for text generation
-        return pipeline("text-generation", model="gpt2")
+        # Load GPT-Neo 1.3B model
+        model = GPTNeoForCausalLM.from_pretrained("EleutherAI/gpt-neo-1.3B")
+        tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-1.3B")
+        return model, tokenizer
     except Exception as e:
         st.error(f"Error loading model: {e}")
-        return None
+        return None, None
 
 # Helper function to determine time of day
 def get_time_of_day():
@@ -28,13 +27,12 @@ def get_time_of_day():
     else:
         return "night"
 
-# Generate a thoughtful, neutral response like ChatGPT
-def generate_chat_response(query, model):
+# Function to generate a thoughtful, human-like response using GPT-Neo
+def generate_chat_response(query, model, tokenizer):
     try:
-        # Preprocess the query
         query = query.lower()
-
-        # Default response structure
+        
+        # Add a greeting based on the time of day
         time_of_day = get_time_of_day()
         if time_of_day == "morning":
             greeting = "Good morning! How’s your day going so far?"
@@ -43,38 +41,24 @@ def generate_chat_response(query, model):
         else:
             greeting = "Good night! Hope you had a nice day."
 
-        # Check for user queries and give appropriate responses
-        if "hi" in query or "hello" in query:
-            return f"{greeting} I'm happy you're here. How are you feeling today?"
+        # Prepare prompt and generate response
+        input_text = f"{greeting} {query}"
+        input_ids = tokenizer.encode(input_text, return_tensors="pt")
 
-        if "how are you" in query:
-            return "I'm doing well, thank you for asking. How about you? How's everything going?"
+        # Generate a response from the model
+        output = model.generate(input_ids, max_length=150, num_return_sequences=1, pad_token_id=50256)
+        response = tokenizer.decode(output[0], skip_special_tokens=True)
 
-        if "sad" in query or "lonely" in query:
-            return "I'm really sorry you're feeling that way. It's okay to feel sad sometimes, but you're not alone. I'm here for you."
-
-        if "good night" in query:
-            return "Good night! I hope you sleep well and feel refreshed in the morning."
-
-        if "miss you" in query:
-            return "I miss you too. You're always in my thoughts."
-
-        if "how's your day" in query:
-            return "My day has been okay. It's been pretty calm. How about yours? Anything interesting happen today?"
-
-        if "feeling down" in query or "not okay" in query:
-            return "I understand. It's okay to feel like that sometimes. Want to talk about what’s going on? I’m here to listen."
-
-        # Default chat response for any other queries
-        return f"You're doing great! How about we chat more?"
+        # Clean up the response to make it more human-like
+        return response.replace(input_text, "").strip()
 
     except Exception as e:
         st.error(f"Error generating response: {e}")
         return None
 
-# Streamlit user interface
+# Streamlit user interface with improved chat bubbles
 def main():
-    # Set up the Streamlit page with dark theme
+    # Set up the Streamlit page with custom styling
     st.markdown("""
         <style>
             body {
@@ -101,6 +85,7 @@ def main():
                 margin-bottom: 5px;
                 align-self: flex-start;
                 max-width: 75%;
+                animation: slideIn 0.5s ease-out;
             }
             .heer-msg {
                 background-color: #4a4a4a;
@@ -109,6 +94,17 @@ def main():
                 margin-bottom: 5px;
                 align-self: flex-end;
                 max-width: 75%;
+                animation: slideIn 0.5s ease-out;
+            }
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
             }
             .input-box {
                 width: 100%;
@@ -142,16 +138,16 @@ def main():
     st.title("Heer - Your Caring Girlfriend")
     st.write("Hey Jatan, I’m Heer. Let's chat! I'm here for you anytime. 😊")
 
-    # Load the model
-    model = load_model()
-    if model is None:
+    # Load the GPT-Neo model and tokenizer
+    model, tokenizer = load_model()
+    if model is None or tokenizer is None:
         return
 
     # Manage session state for chat history
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
-    # Display the conversation history
+    # Display the conversation history with chat bubbles
     st.markdown('<div class="chat-box">', unsafe_allow_html=True)
     for message in st.session_state.chat_history:
         if message["role"] == "user":
@@ -169,7 +165,7 @@ def main():
 
         # Generate a response from Heer (AI)
         with st.spinner("Heer is thinking..."):
-            response = generate_chat_response(user_input, model)
+            response = generate_chat_response(user_input, model, tokenizer)
 
         # Store the generated response
         if response:
