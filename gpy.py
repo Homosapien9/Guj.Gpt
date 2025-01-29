@@ -31,9 +31,25 @@ def get_time_of_day():
 
 # Function to fetch a random image from Unsplash (free image API)
 def get_random_image():
-    try:
-        search_query = random.choice(['love', 'smile', 'comfort', 'positive', 'flowers'])
-        access_key = 'YOUR_UNSPLASH_API_KEY'  # Replace with your Unsplash API key
+    try:search_query = random.choice([
+    'love', 'smile', 'comfort', 'positive', 'flowers', 'motivation', 
+    'selfie', 'beauty', 'intimacy', 'cute animals', 'couple goals', 
+    'romantic', 'adventure', 'travel', 'happiness', 'fun', 'relationships',
+    'dreams', 'fashion', 'friendship', 'sexy', 'inspiration', 'family',
+    'freedom', 'strength', 'peace', 'joy', 'good vibes', 'funny', 'positivity', 
+    'laughter', 'hope', 'bliss', 'courage', 'gratefulness', 'positivity', 
+    'wellness', 'mindfulness', 'success', 'creativity', 'believe', 'ambition', 
+    'art', 'fitness', 'health', 'cozy', 'coffeelovers', 'winter', 'summer', 
+    'autumn', 'spring', 'vacation', 'beach', 'sunset', 'sunrise', 'mountains', 
+    'nature', 'stars', 'sky', 'clouds', 'love yourself', 'hugs', 'kisses', 
+    'together', 'friends', 'self-care', 'vintage', 'romance', 'daydream', 
+    'outdoors', 'wildlife', 'peaceful', 'travel the world', 'wanderlust', 
+    'good morning', 'good night', 'family time', 'grateful', 'mindset', 'blessed',
+    'wanderer', 'city life', 'urban', 'artistic', 'exploration', 'lifestyle', 
+    'food', 'healthy living', 'happiness is', 'motivate yourself', 'fitness journey', 
+    'creative ideas', 'inspired', 'wild', 'calm', 'independent', 'dream big'
+])
+        access_key = 'FYUaCmniHOXHIndX89rRRPklRO9jO56TbAA45tMtuHI'
         
         url = f"https://api.unsplash.com/photos/random?query={search_query}&client_id={access_key}"
         response = requests.get(url)
