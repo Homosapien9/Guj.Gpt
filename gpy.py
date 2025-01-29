@@ -3,6 +3,7 @@ from transformers import pipeline
 from datetime import datetime
 import random
 import requests
+import time
 from gtts import gTTS
 import os
 from io import BytesIO
@@ -28,50 +29,60 @@ def get_time_of_day():
         return "afternoon"
     else:
         return "night"
+        
 def get_random_image():
-    try:
-        # Your access key (Unsplash API key)
-        access_key = 'FYUaCmniHOXHIndX89rRRPklRO9jO56TbAA45tMtuHI'
-        
-        # Expanding search categories to include more human-like, motivational, and emotional themes
-        search_query = random.choice([
-            'love', 'smile', 'comfort', 'positive', 'flowers', 'motivation', 
-            'selfie', 'beauty', 'intimacy', 'cute animals', 'couple goals', 
-            'romantic', 'adventure', 'travel', 'happiness', 'fun', 'relationships',
-            'dreams', 'fashion', 'friendship', 'sexy', 'inspiration', 'family',
-            'freedom', 'strength', 'peace', 'joy', 'good vibes', 'funny', 'positivity', 
-            'laughter', 'hope', 'bliss', 'courage', 'gratefulness', 'wellness', 
-            'mindfulness', 'success', 'creativity', 'believe', 'ambition', 
-            'art', 'fitness', 'health', 'cozy', 'coffeelovers', 'winter', 'summer', 
-            'autumn', 'spring', 'vacation', 'beach', 'sunset', 'sunrise', 'mountains', 
-            'nature', 'stars', 'sky', 'clouds', 'love yourself', 'hugs', 'kisses', 
-            'together', 'friends', 'self-care', 'vintage', 'romance', 'daydream', 
-            'outdoors', 'wildlife', 'peaceful', 'travel the world', 'wanderlust', 
-            'good morning', 'good night', 'family time', 'grateful', 'mindset', 'blessed',
-            'wanderer', 'city life', 'urban', 'artistic', 'exploration', 'lifestyle', 
-            'food', 'healthy living', 'happiness is', 'motivate yourself', 'fitness journey', 
-            'creative ideas', 'inspired', 'wild', 'calm', 'independent', 'dream big'
-        ])
-        
-        # Construct the API URL with your search query and access key
-        url = f"https://api.unsplash.com/photos/random?query={search_query}&client_id={access_key}"
-        
-        # Make the API request
-        response = requests.get(url)
-        
-        # Check if the response is successful (status code 200)
-        if response.status_code == 200:
-            images = response.json()  # Parse the JSON response
-            # Choose a random image from the response
-            image_url = random.choice(images)['urls']['regular']
-            return image_url
-        else:
-            print(f"Error: {response.status_code} - Unable to fetch image")
-            return None
+    access_key = 'FYUaCmniHOXHIndX89rRRPklRO9jO56TbAA45tMtuHI'
+    
+    # Expanding search categories to include more human-like, motivational, and emotional themes
+    search_query = random.choice([
+        'love', 'smile', 'comfort', 'positive', 'flowers', 'motivation', 
+        'selfie', 'beauty', 'intimacy', 'cute animals', 'couple goals', 
+        'romantic', 'adventure', 'travel', 'happiness', 'fun', 'relationships',
+        'dreams', 'fashion', 'friendship', 'sexy', 'inspiration', 'family',
+        'freedom', 'strength', 'peace', 'joy', 'good vibes', 'funny', 'positivity', 
+        'laughter', 'hope', 'bliss', 'courage', 'gratefulness', 'wellness', 
+        'mindfulness', 'success', 'creativity', 'believe', 'ambition', 
+        'art', 'fitness', 'health', 'cozy', 'coffeelovers', 'winter', 'summer', 
+        'autumn', 'spring', 'vacation', 'beach', 'sunset', 'sunrise', 'mountains', 
+        'nature', 'stars', 'sky', 'clouds', 'love yourself', 'hugs', 'kisses', 
+        'together', 'friends', 'self-care', 'vintage', 'romance', 'daydream', 
+        'outdoors', 'wildlife', 'peaceful', 'travel the world', 'wanderlust', 
+        'good morning', 'good night', 'family time', 'grateful', 'mindset', 'blessed',
+        'wanderer', 'city life', 'urban', 'artistic', 'exploration', 'lifestyle', 
+        'food', 'healthy living', 'happiness is', 'motivate yourself', 'fitness journey', 
+        'creative ideas', 'inspired', 'wild', 'calm', 'independent', 'dream big'
+    ])
 
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
+    url = f"https://api.unsplash.com/photos/random?query={search_query}&client_id={access_key}"
+    
+    retry_count = 3
+    for attempt in range(retry_count):
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                images = response.json()  # Parse the JSON response
+                image_url = random.choice(images)['urls']['regular']
+                return image_url
+            elif response.status_code == 24:
+                print("Rate limit exceeded. Please try again later.")
+                return None
+            elif response.status_code == 5:
+                print("Internal server error. Retrying...")
+            elif response.status_code == 13:
+                print(f"Bad request. Invalid query: {search_query}")
+                return None
+            elif response.status_code == 28:
+                print("Request timeout. Retrying...")
+            else:
+                print(f"Error: {response.status_code} - Unable to fetch image")
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+        
+        # Wait before retrying
+        time.sleep(2)  # Wait for 2 seconds before retrying
+
+    return None
 
 # Example Usage:
 image = get_random_image()
@@ -80,7 +91,6 @@ if image:
 else:
     print("Could not retrieve image.")
 
-# Generate a thoughtful, neutral response like ChatGPT
 def generate_chat_response(query, model, user_name=None):
     try:
         query = query.lower()
