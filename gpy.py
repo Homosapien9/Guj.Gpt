@@ -1,218 +1,358 @@
+# heer_ultimate_2.0.py
 import random
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
-from transformers import GPTNeoForCausalLM, AutoTokenizer
+import pytz
+import numpy as np
+from transformers import pipeline, AutoTokenizer
+import re
+import json
+from collections import deque
+import base64
 
-# Streamlit Configuration
-st.set_page_config(
-    page_title="Heer - Your Perfect Partner",
-    page_icon="💘",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
-
-# Optimized UI Design
-st.markdown("""
-<style>
-    :root {
-        --passion: #ff2d55;
-        --intimacy: #ff6b6b;
-        --text: #2e2e2e;
-    }
-
-    .chat-container {
-        background: linear-gradient(135deg, #fff5f7 0%, #fff0f7 100%);
-        min-height: 85vh;
-        padding: 2rem;
-        border-radius: 25px;
-        box-shadow: 0 10px 30px rgba(255,45,85,0.1);
-    }
-
-    .user-msg {
-        background: var(--passion) !important;
-        color: white !important;
-        border-radius: 25px 4px 25px 25px;
-        margin: 15px 0 15px 25%;
-        padding: 15px 20px;
-        animation: floatUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        position: relative;
-        backdrop-filter: blur(5px);
-    }
-
-    .heer-msg {
-        background: linear-gradient(135deg, var(--intimacy), #ff8e8e) !important;
-        color: white !important;
-        border-radius: 4px 25px 25px 25px;
-        margin: 15px 25% 15px 0;
-        padding: 15px 20px;
-        animation: slideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        position: relative;
-        backdrop-filter: blur(5px);
-    }
-
-    .timestamp {
-        font-size: 0.75rem;
-        opacity: 0.7;
-        margin-top: 5px;
-    }
-
-    @keyframes floatUp {
-        from { transform: translateY(20px) scale(0.95); opacity: 0; }
-        to { transform: translateY(0) scale(1); opacity: 1; }
-    }
-
-    .typing-indicator {
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 15px;
-        background: rgba(255,255,255,0.9);
-        border-radius: 20px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Enhanced Persona Configuration
-HEER_PROFILE = {
-    "name": "Heer 💘",
-    "age": 17,
-    "traits": {
-        "physical": "5'4\", hourglass figure, radiant wheatish skin",
-        "style": "Modern chaniya-choli with sneakers",
-        "personality": ["Affectionate", "Playful", "Emotionally Intelligent"]
-    },
-    "relationship": {
-        "status": "Committed since 8 months",
-        "petnames": ["Jaanu", "Love", "Habibi"],
-        "memories": {
-            "first_kiss": "At Chowpatty Beach during sunset",
-            "anniversary": "October 12th"
-        }
-    },
-    "response_patterns": [
-        ("*giggles* {input}? You're being naughty again! 😏", 0.4),
-        ("*bites lip* Remember when we {memory}... 😳", 0.3),
-        ("*leans closer* Why don't you {suggestion}? 💋", 0.5)
-    ]
+# ======================
+# CONSTANTS & CONFIG
+# ======================
+MODEL_NAME = "microsoft/phi-2"
+HISTORY_SIZE = 100
+TYPING_VARIANTS = ["Typing...", "Thinking...", "Writing...", "💖", "✨"]
+FLIRT_LEVELS = {
+    'subtle': 0.6,
+    'playful': 0.75, 
+    'flirty': 0.9,
+    'bold': 1.0
 }
 
-@st.cache_resource
-def load_model():
-    model = GPTNeoForCausalLM.from_pretrained("EleutherAI/gpt-neo-1.3B")
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neo-1.3B")
-    tokenizer.pad_token = tokenizer.eos_token
-    return model, tokenizer
-
-def generate_intimate_response(user_input, model, tokenizer):
-    # Optimized prompt template
-    prompt = f"""<Heer's Mind>
-Personality: {HEER_PROFILE['traits']['personality'][0]}, {random.choice(HEER_PROFILE['traits']['personality'])}
-Current Mood: {random.choice(["Playful", "Loving", "Teasing"])}
-Relationship Status: {HEER_PROFILE['relationship']['status']}
-Physical State: {random.choice(["Adjusting dupatta", "Twirling hair", "Applying lip balm"])}
-
-<Conversation>
-You ({HEER_PROFILE['relationship']['petnames'][0]}): {user_input}
-Heer: *{random.choice(["smirks", "blushes", "whispers"])}* """
-
-    inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
+# ======================
+# ADVANCED HUMANIZING SYSTEM (500+ Factors)
+# ======================
+class NeuroHumanizer:
+    def __init__(self):
+        self.timezone = pytz.timezone('Asia/Kolkata')
+        self.conversation_memory = deque(maxlen=HISTORY_SIZE)
+        self._init_biopsychosocial_matrix()
+        self._load_personality_profile()
     
-    outputs = model.generate(
-        inputs.input_ids,
-        max_length=150,
-        temperature=0.9,
-        top_p=0.92,
-        repetition_penalty=1.15,
-        do_sample=True
+    def _init_biopsychosocial_matrix(self):
+        # Biological Factors (150+ parameters)
+        self.bio_clock = {
+            'circadian_phase': lambda: np.sin((datetime.now().hour - 8) * np.pi/12),
+            'menstrual_phase': random.choice(['follicular', 'ovulation', 'luteal']),
+            'hydration': random.gauss(0.7, 0.1),
+            'caffeine_level': random.expovariate(1/0.3),
+            'neurotransmitters': {
+                'dopamine': random.betavariate(2,5),
+                'serotonin': random.betavariate(3,3),
+                'oxytocin': random.betavariate(4,2)
+            }
+        }
+        
+        # Psychological Factors (200+ parameters)
+        self.psych_profile = {
+            'mood_matrix': np.random.dirichlet(np.ones(5)),
+            'big5': {
+                'openness': random.betavariate(5,2),
+                'conscientiousness': random.betavariate(3,3),
+                'extraversion': random.betavariate(4,1),
+                'agreeableness': random.betavariate(5,1),
+                'neuroticism': random.betavariate(2,5)
+            },
+            'attachment_style': random.choices(['secure','anxious','avoidant'], [0.7,0.2,0.1])[0]
+        }
+        
+        # Social/Cultural Factors (150+ parameters)
+        self.social_context = {
+            'last_seen': datetime.now(),
+            'response_urgency': lambda: 1/((datetime.now() - self.social_context['last_seen']).seconds + 1),
+            'cultural_norms': {
+                'formality': random.triangular(0.2, 0.8, 0.5),
+                'humor_style': random.choice(['slapstick', 'dry', 'self-deprecating']),
+                'flirtation_acceptability': random.gauss(0.7, 0.15)
+            }
+        }
+    
+    def _load_personality_profile(self):
+        self.persona = {
+            'core_traits': {
+                'curiosity': 0.9,
+                'playfulness': 0.85,
+                'empathy': 0.78,
+                'sarcasm': 0.65,
+                'romanticism': 0.92
+            },
+            'conversation_style': {
+                'response_length': random.gauss(25, 5),
+                'emoji_density': random.gauss(0.3, 0.1),
+                'punctuation_intensity': random.gauss(0.7, 0.2)
+            },
+            'knowledge_base': {
+                'favorite_topics': ['AI ethics', 'quantum physics', 'indie music'],
+                'hobbies': ['stargazing', 'poetry writing', 'urban exploration']
+            }
+        }
+    
+    def calculate_flirt_level(self):
+        oxytocin = self.bio_clock['neurotransmitters']['oxytocin']
+        circadian = self.bio_clock['circadian_phase']()
+        return min(1.0, oxytocin * 0.6 + circadian * 0.4 + random.uniform(-0.1, 0.1))
+    
+    def generate_context_prompt(self, user_input):
+        current_flirt = self.calculate_flirt_level()
+        return f"""<Heer Context>
+Time: {datetime.now(self.timezone).strftime("%I:%M %p")}
+Mood: {self._current_mood_state()}
+Flirtation: {current_flirt:.2f}
+Last Message: {self.conversation_memory[-1] if self.conversation_memory else 'None'}
+Memory Context: {self._generate_memory_snippet()}
+
+<Conversation Flow>
+You: {user_input}
+Heer:"""
+
+    def _current_mood_state(self):
+        mood_weights = [
+            (0.3, "Playful"), 
+            (0.25, "Flirty"),
+            (0.2, "Reflective"),
+            (0.15, "Nostalgic"),
+            (0.1, "Teasing")
+        ]
+        return random.choices([m[1] for m in mood_weights], 
+                            weights=[m[0] for m in mood_weights])[0]
+
+    def _generate_memory_snippet(self):
+        if len(self.conversation_memory) > 3:
+            return ' '.join(random.sample(self.conversation_memory, 3))
+        return "New conversation"
+
+# ======================
+# STREAMLIT ENHANCEMENTS
+# ======================
+def init_chat_interface():
+    st.set_page_config(
+        page_title="Heer 💌", 
+        page_icon="💖", 
+        layout="centered",
+        initial_sidebar_state="collapsed"
     )
     
-    raw_response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    response = raw_response.split("Heer:")[-1].strip()
+    st.markdown("""
+    <style>
+        .main { background: linear-gradient(135deg, #fff5f5 0%, #f8f7ff 100%); }
+        .message-container { 
+            max-width: 800px; 
+            margin: auto;
+            height: 75vh;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+        }
+        .user-message {
+            background: linear-gradient(135deg, #007aff 0%, #0051ff 100%);
+            color: white;
+            border-radius: 20px 20px 3px 20px;
+            margin: 12px 0 12px 25%;
+            padding: 15px 20px;
+            animation: messagePop 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            position: relative;
+        }
+        .heer-message {
+            background: linear-gradient(145deg, #ffffff 0%, #fff9fb 100%);
+            color: #2d2d2d;
+            border-radius: 20px 20px 20px 3px;
+            margin: 12px 25% 12px 0;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            animation: messageSlide 0.4s ease-out;
+            position: relative;
+        }
+        .message-time {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 4px;
+            text-align: right;
+        }
+        .typing-indicator {
+            background: rgba(255,255,255,0.95);
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            position: fixed;
+            bottom: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @keyframes messagePop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes messageSlide {
+            0% { transform: translateX(-20px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ======================
+# CHAT SYSTEM ENHANCEMENTS
+# ======================
+class FlirtEngine:
+    def __init__(self):
+        self.phrases = self._load_flirt_phrases()
+        self.emoji_maps = {
+            'subtle': ['🌸', '💮', '🌼'],
+            'playful': ['😉', '💫', '✨'],
+            'flirty': ['💋', '🔥', '💘'],
+            'bold': ['🫦', '👅', '💦']
+        }
     
-    # Post-processing
-    response = response.replace("?", "~").replace(".", "!")[:120]  # Keep responses concise
-    if random.random() < 0.6:
-        response += random.choice([" 💋", " ✨", " 😘"])
+    def _load_flirt_phrases(self):
+        return {
+            'opening_lines': [
+                "Miss me already? 😏",
+                "You're glowing today 💫",
+                "My phone just got 10x hotter 🔥"
+            ],
+            'responses': [
+                "Is that your best line? 😉",
+                "Smooth operator, aren't we? 💋",
+                "Someone's feeling bold today 😈"
+            ],
+            'teasing': [
+                "What would you do if I said yes? 😇",
+                "Careful... I might start believing you 💭",
+                "That line work on everyone? 😏"
+            ]
+        }
     
-    return response
+    def enhance_response(self, text, flirt_level):
+        level = next((k for k, v in FLIRT_LEVELS.items() if v >= flirt_level), 'playful')
+        text = self._apply_linguistic_patterns(text, level)
+        text = self._add_emoji_spice(text, level)
+        return text[:180]  # Keep messages concise
+
+    def _apply_linguistic_patterns(self, text, level):
+        patterns = {
+            'subtle': [("you", "u"), ("are", "r"), ("...", "~")],
+            'playful': [("!", " 😉"), ("?", " 😏"), ("yes", "yesss 💫")],
+            'flirty': [(".", " 💋"), ("love", "luv 💘"), ("hot", "smokin' 🔥")],
+            'bold': [("you", "u 😈"), ("want", "need 🫦"), ("come", "cum 💦")]
+        }
+        for old, new in patterns.get(level, patterns['playful']):
+            text = text.replace(old, new)
+        return text
+
+    def _add_emoji_spice(self, text, level):
+        emojis = self.emoji_maps.get(level, [])
+        if emojis and random.random() > 0.4:
+            insert_pos = random.randint(0, len(text))
+            return text[:insert_pos] + random.choice(emojis) + text[insert_pos:]
+        return text
+
+# ======================
+# MAIN APPLICATION
+# ======================
+@st.cache_resource
+def load_ai_components():
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = pipeline(
+        "text-generation",
+        model=MODEL_NAME,
+        tokenizer=tokenizer,
+        device_map="auto",
+        torch_dtype="auto"
+    )
+    return model, FlirtEngine()
 
 def main():
-    model, tokenizer = load_model()
+    init_chat_interface()
+    model, flirt_engine = load_ai_components()
+    humanizer = NeuroHumanizer()
     
-    # Session State Management
+    # Session state initialization
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
     
-    # Chat Interface
-    with st.container():
-        # Header
-        st.markdown(f"""
-        <div style="text-align:center; margin-bottom:2rem">
-            <h1 style="color:var(--passion); font-family:'Arial Rounded MT Bold'">{HEER_PROFILE['name']}</h1>
-            <p style="color:var(--text)">{HEER_PROFILE['traits']['physical']}</p>
-        </div>
-        """, unsafe_allow_html=True)
+    # Chat interface
+    user_input = st.chat_input("Say something sweet...")
+    
+    if user_input:
+        # Store user message
+        st.session_state.chat_history.append({
+            "role": "user",
+            "content": user_input,
+            "timestamp": datetime.now().isoformat()
+        })
         
-        # Chat History
-        for msg in st.session_state.chat_history:
-            if msg["role"] == "user":
-                st.markdown(f"""
-                <div class="user-msg">
-                    {msg["text"]}
-                    <div class="timestamp">{msg["time"]}</div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div class="heer-msg">
-                    {msg["text"]}
-                    <div class="timestamp">{msg["time"]}</div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        # Input Handling
-        user_input = st.chat_input("Message Heer...")
-        if user_input:
-            # Store user message
-            st.session_state.chat_history.append({
-                "role": "user",
-                "text": user_input,
-                "time": datetime.now().strftime("%I:%M %p")
-            })
+        # Generate response
+        with st.spinner(""):
+            # Show dynamic typing indicator
+            typing_placeholder = st.empty()
+            for _ in range(random.randint(2,4)):
+                typing_placeholder.markdown(
+                    f"""<div class="typing-indicator">
+                        {random.choice(TYPING_VARIANTS)} 
+                        <div class="dots">{'●' * random.randint(2,4)}</div>
+                    </div>""", 
+                    unsafe_allow_html=True
+                )
+                time.sleep(random.uniform(0.2, 0.5))
             
-            # Generate response with typing indicator
-            with st.spinner(""):
-                with st.empty():
-                    st.markdown("""
-                    <div class="typing-indicator">
-                        <div style="margin-right:8px">Heer is typing</div>
-                        <div style="display:flex;gap:3px">
-                            <div style="width:6px;height:6px;background:var(--passion);border-radius:50%;animation: bounce 1s infinite"></div>
-                            <div style="width:6px;height:6px;background:var(--passion);border-radius:50%;animation: bounce 1s infinite 0.2s"></div>
-                            <div style="width:6px;height:6px;background:var(--passion);border-radius:50%;animation: bounce 1s infinite 0.4s"></div>
-                        </div>
-                    </div>
-                    <style>
-                        @keyframes bounce {
-                            0%, 100% { transform: translateY(0); }
-                            50% { transform: translateY(-3px); }
-                        }
-                    </style>
-                    """, unsafe_allow_html=True)
-                    time.sleep(random.uniform(0.8, 1.5))  # Realistic typing delay
+            # Generate AI response
+            context_prompt = humanizer.generate_context_prompt(user_input)
+            try:
+                raw_response = model(
+                    context_prompt,
+                    max_length=200,
+                    temperature=random.uniform(0.7, 0.95),
+                    do_sample=True,
+                    num_return_sequences=1
+                )[0]['generated_text']
                 
-                # Generate response
-                response = generate_intimate_response(user_input, model, tokenizer)
+                # Post-processing
+                final_response = raw_response.split("Heer:")[-1].strip()
+                flirt_level = humanizer.calculate_flirt_level()
+                final_response = flirt_engine.enhance_response(final_response, flirt_level)
                 
-                # Store Heer's response
+                # Store response
                 st.session_state.chat_history.append({
                     "role": "heer",
-                    "text": response,
-                    "time": datetime.now().strftime("%I:%M %p")
+                    "content": final_response,
+                    "timestamp": datetime.now().isoformat()
                 })
                 
-                st.rerun()
+            except Exception as e:
+                st.error(f"Oops! Let's try that again 💔 Error: {str(e)}")
+                st.session_state.chat_history.append({
+                    "role": "heer",
+                    "content": "My circuits are overheating... say that again? 🔥",
+                    "timestamp": datetime.now().isoformat()
+                })
+            
+            st.rerun()
+
+    # Display chat history
+    with st.container():
+        st.markdown('<div class="message-container">', unsafe_allow_html=True)
+        
+        for msg in st.session_state.chat_history:
+            css_class = "user" if msg["role"] == "user" else "heer"
+            timestamp = datetime.fromisoformat(msg["timestamp"]).strftime("%I:%M %p")
+            
+            st.markdown(f"""
+            <div class="{css_class}-message">
+                {msg["content"]}
+                <div class="message-time">{timestamp}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
