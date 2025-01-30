@@ -180,12 +180,12 @@ class FlirtEngine:
         return text
 
 # ======================
-# CHAT SYSTEM CORE
+# CHAT SYSTEM CORE (FIXED)
 # ======================
 class DarkChatSystem:
     def __init__(self):
-        self.model = self._load_model()
-        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)  # Initialize first
+        self.model = self._load_model()  # Then load model
         self.chat_history = deque(maxlen=HISTORY_SIZE)
         self.humanizer = NeuroHumanizer()
         self.flirt_engine = FlirtEngine()
@@ -200,7 +200,7 @@ class DarkChatSystem:
         return pipeline(
             "text-generation",
             model=MODEL_NAME,
-            tokenizer=self.tokenizer,
+            tokenizer=self.tokenizer,  # Now properly initialized
             device_map="auto",
             torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
             low_cpu_mem_usage=True
