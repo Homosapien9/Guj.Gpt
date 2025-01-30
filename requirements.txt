@@ -3,3 +3,4 @@ torch>=2.0
 transformers>=4.30
 pytz>=2023.3
 numpy>=1.24
+accelerate>=0.26.0'
