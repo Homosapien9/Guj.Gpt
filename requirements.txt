@@ -1,3 +1,5 @@
-streamlit>=1.22
-duckduckgo-search>=3.0
-textblob==0.17.1
+streamlit 
+duckduckgo-search 
+textblob 
+nltk
+python -m textblob.download_corpora
