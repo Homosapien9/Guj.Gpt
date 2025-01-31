@@ -2,4 +2,3 @@ streamlit
 duckduckgo-search 
 textblob 
 nltk
-python -m textblob.download_corpora
