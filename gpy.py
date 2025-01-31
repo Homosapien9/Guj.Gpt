@@ -7,6 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import aiohttp
 import asyncio
 from pyinstrument import Profiler
+import random
 
 # Quantum Configuration
 MAX_RESULTS = st.secrets.get("MAX_RESULTS", 15)
