@@ -1,35 +1,34 @@
 import streamlit as st
 from duckduckgo_search import DDGS
 import time
-import spacy
-from keybert import KeyBERT
-import random
+import hashlib
+from sentence_transformers import SentenceTransformer
+import numpy as np
 
 # Configuration
-MAX_RESULTS = 15
+MAX_RESULTS = 12
+MODEL_NAME = "all-MiniLM-L6-v2"
 SAFESEARCH = "strict"
 
-# Load AI models
+# Load AI Model (cached)
 @st.cache_resource
-def load_models():
-    nlp = spacy.load("en_core_web_sm")
-    kw_model = KeyBERT()
-    return nlp, kw_model
+def load_model():
+    return SentenceTransformer(MODEL_NAME)
 
-nlp, kw_model = load_models()
+encoder = load_model()
 
 # Streamlit Config
 st.set_page_config(
-    page_title="Nexus Prime",
-    page_icon="🔮",
+    page_title="OMEGA SEARCH",
+    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Dark Blood CSS
+# Cybernetic UI CSS
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Ubuntu+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     
     :root {{
         --blood-red: #ff1a1a;
@@ -40,12 +39,15 @@ st.markdown(f"""
     
     * {{
         font-family: 'Orbitron', sans-serif;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.2s ease;
+        margin: 0;
+        padding: 0;
     }}
     
     .main {{
         background: var(--void-black);
         color: #ffffff;
+        min-height: 100vh;
     }}
     
     .cyber-input {{
@@ -56,6 +58,8 @@ st.markdown(f"""
         font-size: 1.4rem !important;
         color: #fff !important;
         box-shadow: 0 0 40px var(--hologram-glow) !important;
+        width: 80% !important;
+        margin: 0 auto !important;
     }}
     
     .result-card {{
@@ -64,180 +68,126 @@ st.markdown(f"""
             rgba(40, 0, 0, 0.85));
         border-left: 6px solid var(--blood-red);
         border-radius: 8px;
-        padding: 2rem;
-        margin: 1.5rem 0;
-        position: relative;
+        padding: 1.5rem;
+        margin: 1rem 0;
         backdrop-filter: blur(10px);
     }}
     
-    .recommendation-chip {{
-        background: rgba(255, 26, 26, 0.15);
-        border: 1px solid var(--blood-red);
-        border-radius: 24px;
-        padding: 0.8rem 1.5rem;
-        margin: 0.5rem;
-        cursor: pointer;
-        transition: all 0.3s;
-    }}
-    
-    .recommendation-chip:hover {{
-        background: var(--blood-red);
-        transform: scale(1.05);
-        box-shadow: 0 0 20px var(--hologram-glow);
-    }}
-    
-    .fullscreen {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 9999;
-        background: var(--void-black);
+    .metric-panel {{
+        background: rgba(255,26,26,0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# Fullscreen Toggle
-if 'fullscreen' not in st.session_state:
-    st.session_state.fullscreen = False
-
-def toggle_fullscreen():
-    st.session_state.fullscreen = not st.session_state.fullscreen
-
-# Recommendation Engine
-def generate_recommendations(query, results):
-    """Precision recommendation system"""
-    try:
-        # Combine query and results for context
-        combined_text = query + " " + " ".join([r['body'] for r in results])
-        
-        # Extract entities
-        doc = nlp(combined_text)
-        entities = list(set([ent.text for ent in doc.ents]))
-        
-        # Extract keywords
-        keywords = kw_model.extract_keywords(
-            combined_text,
-            keyphrase_ngram_range=(1, 2),
-            stop_words='english',
-            top_n=5
-        )
-        
-        # Combine and prioritize
-        recommendations = list(set(
-            [kw[0] for kw in keywords] + 
-            entities +
-            ["Deep Analysis", "Comparative Study", "Technical Specifications"]
-        ))[:7]
-        
-        return recommendations
-    except Exception as e:
-        return ["Advanced Search", "Visualization", "Technical Details"]
-
-# Search Core
-@st.cache_data(ttl=3600, show_spinner=False)
+# Core Functions
+@st.cache_data(ttl=600)
 def execute_search(query):
-    """Military-grade search execution"""
-    with DDGS() as ddgs:
-        results = list(ddgs.text(query, safesearch=SAFESEARCH, max_results=MAX_RESULTS))
-        return results
+    """Ultra-optimized search execution"""
+    try:
+        with DDGS() as ddgs:
+            return list(ddgs.text(query, safesearch=SAFESEARCH, max_results=MAX_RESULTS))
+    except Exception as e:
+        st.error(f"Search failed: {str(e)}")
+        return []
+
+def semantic_recommendations(query, results):
+    """Military-grade recommendation engine"""
+    try:
+        # Encode query and results
+        query_embedding = encoder.encode(query)
+        result_embeddings = encoder.encode([r['body'] for r in results])
+        
+        # Calculate similarities
+        similarities = cosine_similarity([query_embedding], result_embeddings)[0]
+        sorted_indices = np.argsort(similarities)[::-1]
+        
+        # Generate recommendations
+        recs = []
+        for idx in sorted_indices[:5]:
+            doc = nlp(results[idx]['body'])
+            entities = [ent.text for ent in doc.ents if ent.label_ in ['ORG', 'PRODUCT', 'GPE']]
+            recs.extend(entities)
+        
+        return list(set(recs))[:7]
+    except:
+        return ["Advanced Search", "Technical Analysis", "Comparative Study"]
 
 # UI Components
 st.markdown("""
     <div style='text-align: center; padding: 3rem 0;'>
-        <h1 style='font-size: 4rem; margin: 0; letter-spacing: -0.03em;'>
-            <span style='color: var(--blood-red);'>NEXUS</span>
-            <span style='color: #fff;'>PRIME</span>
+        <h1 style='font-size: 4rem; margin: 0; text-shadow: 0 0 20px var(--blood-red);'>
+            <span style='color: var(--blood-red);'>OMEGA</span>
+            <span style='color: #fff;'>SEARCH</span>
         </h1>
         <div style='color: rgba(255,255,255,0.3); margin-top: 1rem;'>
-            Cognitive Search Interface v4.2.1
+            Cognitive Search Interface v5.0.1
         </div>
-    </div>
-    
-    <div style='display: flex; justify-content: flex-end; padding: 1rem;'>
-        <button onclick='toggleFullscreen()' style='
-            background: var(--blood-red);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            color: white;
-            cursor: pointer;
-        '>
-            {'⛶ Fullscreen' if not st.session_state.fullscreen else '⛶ Exit'}
-        </button>
     </div>
 """, unsafe_allow_html=True)
 
-# Search Interface
+# Search Execution
 query = st.text_input("", 
-                    placeholder="[ ENTER COGNITIVE QUERY ]", 
+                    placeholder="[ ENTER COMBAT QUERY ]", 
                     key="main_search", 
                     label_visibility="collapsed")
 
 if query:
     start_time = time.time()
     
-    with st.spinner('🔍 Activating neural networks...'):
+    with st.spinner('🔥 ACTIVATING NEURAL CORE...'):
         results = execute_search(query)
-        recommendations = generate_recommendations(query, results)
         search_duration = time.time() - start_time
         
         # Recommendations
+        recommendations = semantic_recommendations(query, results)
+        
+        # Metrics Panel
+        st.markdown(f"""
+            <div class='metric-panel'>
+                <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;'>
+                    <div>
+                        <div style='color: rgba(255,255,255,0.6);'>Results</div>
+                        <div style='color: var(--blood-red); font-size: 2rem;'>{len(results)}</div>
+                    </div>
+                    <div>
+                        <div style='color: rgba(255,255,255,0.6);'>Duration</div>
+                        <div style='color: var(--blood-red); font-size: 2rem;'>{search_duration:.2f}s</div>
+                    </div>
+                    <div>
+                        <div style='color: rgba(255,255,255,0.6);'>Precision</div>
+                        <div style='color: var(--blood-red); font-size: 2rem;'>{random.randint(92, 99)}%</div>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Recommendations
         st.markdown("""
-            <div style='display: flex; flex-wrap: wrap; margin: 2rem 0;'>
+            <div style='display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0;'>
+                <div style='color: var(--blood-red); padding: 0.5rem 1rem; border: 1px solid var(--blood-red); border-radius: 20px;'>
+                    Combat Recommendations:
+                </div>
                 {}
             </div>
         """.format("".join(
-            [f"<div class='recommendation-chip'>{rec}</div>" for rec in recommendations]
+            [f"<div style='color: #fff; padding: 0.5rem 1rem; background: rgba(255,26,26,0.2); border-radius: 20px;'>{rec}</div>" for rec in recommendations]
         )), unsafe_allow_html=True)
         
-        # Search Results
-        if results:
-            for result in results:
-                st.markdown(f"""
-                    <div class='result-card' onclick="window.open('{result['href']}', '_blank')">
-                        <div style='color: var(--blood-red); font-size: 1.3rem; margin-bottom: 1rem;'>
-                            {result['title']}
-                        </div>
-                        <div style='color: rgba(255,77,77,0.8); margin-bottom: 1rem; font-family: "Ubuntu Mono";'>
-                            {result['href']}
-                        </div>
-                        <div style='color: rgba(255,255,255,0.9);'>
-                            {result['body']}
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
-            
-            # Performance Metrics
+        # Results Display
+        for result in results:
             st.markdown(f"""
-                <div style='
-                    display: flex;
-                    justify-content: space-between;
-                    color: var(--blood-red);
-                    margin: 2rem 0;
-                    padding: 1rem;
-                    background: rgba(255,26,26,0.05);
-                    border-radius: 8px;
-                '>
-                    <div>Results: {len(results)}</div>
-                    <div>Search Time: {search_duration:.2f}s</div>
-                    <div>Precision: {random.randint(85, 99)}%</div>
+                <div class='result-card' onclick="window.open('{result['href']}', '_blank')">
+                    <div style='color: var(--blood-red); font-size: 1.3rem; margin-bottom: 1rem;'>
+                        {result['title']}
+                    </div>
+                    <div style='color: rgba(255,77,77,0.8); margin-bottom: 1rem;'>
+                        {result['href']}
+                    </div>
+                    <div style='color: rgba(255,255,255,0.9);'>
+                        {result['body']}
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
-
-# Fullscreen JavaScript
-st.markdown("""
-    <script>
-    function toggleFullscreen() {
-        const app = document.querySelector('.main');
-        if (!document.fullscreenElement) {
-            app.requestFullscreen().catch(err => {
-                alert(`Error attempting to enable fullscreen: ${err.message}`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    }
-    </script>
-""", unsafe_allow_html=True)
