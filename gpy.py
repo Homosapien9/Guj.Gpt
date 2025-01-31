@@ -1,233 +1,242 @@
-# requirements.txt
-# duckduckgo-search==3.9.4
-# streamlit==1.29.0
-# sentence-transformers==2.2.2
-# scikit-learn==1.2.2
-# numpy==1.24.3
-
 import streamlit as st
 from duckduckgo_search import DDGS
 import time
-from sentence_transformers import SentenceTransformer
 import numpy as np
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+import aiohttp
+import asyncio
+from pyinstrument import Profiler
 
-# Streamlit Config
+# Quantum Configuration
+MAX_RESULTS = st.secrets.get("MAX_RESULTS", 15)
+MODEL_NAME = st.secrets.get("MODEL_NAME", "all-MiniLM-L6-v2")
+SAFESEARCH = "strict"
+CACHE_TTL = 1800  # 30 minutes
+ASYNC_WORKERS = 5
+
+# Advanced Streamlit Config
 st.set_page_config(
-    page_title="QUANTUMAI",
+    page_title="QUANTUMAI Ω",
     page_icon="🌌",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': 'https://quantumai.help',
+        'Report a bug': "https://quantumai.bugs",
+        'About': "QUANTUMAI v3.1 - Quantum Cognitive Search Matrix"
+    }
 )
 
-# Configuration
-MAX_RESULTS = 12
-MODEL_NAME = "all-MiniLM-L6-v2"
-SAFESEARCH = "strict"
-CACHE_TTL = 3600  # 1 hour
-
-# Load AI Model (cached)
+# Quantum Loader with Progress
 @st.cache_resource(show_spinner=False)
-def load_model():
-    return SentenceTransformer(MODEL_NAME)
+def load_quantum_model():
+    with st.spinner('🌀 Initializing Quantum Neural Net...'):
+        progress_bar = st.progress(0)
+        model = SentenceTransformer(MODEL_NAME)
+        progress_bar.progress(100)
+        return model
 
-encoder = load_model()
+encoder = load_quantum_model()
 
-# Quantum UI CSS
+# Quantum CSS Enhancements
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
-    
-    :root {{
-        --quantum-blue: #00f3ff;
-        --neon-purple: #bc13fe;
-        --void-black: #000000;
-        --hologram-glow: rgba(0, 243, 255, 0.2);
+    /* Add quantum particle animation */
+    @keyframes quantum-glow {{
+        0% {{ opacity: 0.2; }}
+        50% {{ opacity: 0.8; }}
+        100% {{ opacity: 0.2; }}
     }}
     
-    * {{
-        font-family: 'Audiowide', sans-serif;
-        margin: 0;
-        padding: 0;
+    .quantum-particle {{
+        position: fixed;
+        pointer-events: none;
+        animation: quantum-glow 2s infinite;
     }}
     
-    .main {{
-        background: radial-gradient(circle at center, #000428 0%, #004e92 150%);
-        min-height: 100vh;
-    }}
-    
-    .quantum-input {{
-        background: rgba(0, 10, 30, 0.95) !important;
-        border: 2px solid var(--quantum-blue) !important;
-        border-radius: 15px !important;
-        padding: 1.5rem !important;
-        font-size: 1.2rem !important;
-        color: var(--quantum-blue) !important;
-        box-shadow: 0 0 50px var(--hologram-glow) !important;
-        width: 80% !important;
-        margin: 0 auto !important;
+    /* Enhanced result card animation */
+    @keyframes quantum-entrance {{
+        0% {{ transform: translateY(20px); opacity: 0; }}
+        100% {{ transform: translateY(0); opacity: 1; }}
     }}
     
     .result-card {{
-        background: linear-gradient(145deg, 
-            rgba(0, 20, 40, 0.95), 
-            rgba(0, 50, 100, 0.85));
-        border-left: 6px solid var(--quantum-blue);
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        backdrop-filter: blur(5px);
-        cursor: pointer;
-        transition: transform 0.2s ease;
+        animation: quantum-entrance 0.4s ease-out;
     }}
     
-    .result-card:hover {{
-        transform: translateX(10px);
-        box-shadow: 0 0 20px var(--hologram-glow);
-    }}
-    
-    .metric-panel {{
-        background: rgba(0, 243, 255, 0.1);
-        border-radius: 8px;
-        padding: 0.5rem;
-        margin: 0.5rem 0;
-    }}
-    
+    /* Add responsive typography */
     @media (max-width: 768px) {{
-        .quantum-input {{
-            width: 95% !important;
-            padding: 1rem !important;
+        .quantum-text {{
+            font-size: 1.5rem !important;
         }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# Core Functions
-@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
-def execute_search(query):
-    """Optimized quantum search execution"""
+# Quantum Core Functions
+async def async_search(session, query):
+    """Asynchronous quantum search execution"""
     try:
-        with DDGS() as ddgs:
-            return list(ddgs.text(query, safesearch=SAFESEARCH, max_results=MAX_RESULTS))
+        async with session.get(
+            "https://api.duckduckgo.com/",
+            params={
+                "q": query,
+                "format": "json",
+                "no_html": 1,
+                "no_redirect": 1,
+                "k": MAX_RESULTS
+            }
+        ) as response:
+            data = await response.json()
+            return data.get("Results", [])
     except Exception as e:
-        st.error(f"Quantum flux disturbance: {str(e)}")
+        st.error(f"Quantum entanglement failure: {str(e)}")
         return []
 
-@st.cache_data(ttl=CACHE_TTL//2)
-def get_suggestions(query):
-    """Cached quantum suggestions"""
-    try:
-        with DDGS() as ddgs:
-            return [s['phrase'] for s in ddgs.suggestions(query)][:5]
-    except:
-        return ["Quantum Computing", "AI Ethics", "Neural Networks"]
+@st.cache_data(ttl=CACHE_TTL, show_spinner=False)
+async def execute_quantum_search(query):
+    """Hyper-optimized quantum search cluster"""
+    async with aiohttp.ClientSession() as session:
+        tasks = [async_search(session, query) for _ in range(ASYNC_WORKERS)]
+        results = await asyncio.gather(*tasks)
+        return [item for sublist in results for item in sublist][:MAX_RESULTS]
 
-def generate_recommendations(query, results):
-    """Optimized recommendation engine"""
-    try:
-        query_embedding = encoder.encode(query)
-        result_embeddings = encoder.encode([r['body'][:200] for r in results])  # Truncate for speed
-        similarities = cosine_similarity([query_embedding], result_embeddings)[0]
-        return [results[i]['title'] for i in np.argsort(similarities)[-3:][::-1]]
-    except:
-        return ["Advanced Search", "Technical Analysis", "Comparative Study"]
+# Quantum Telemetry
+def quantum_telemetry(func):
+    """Performance monitoring decorator"""
+    async def wrapper(*args, **kwargs):
+        with Profiler() as profiler:
+            result = await func(*args, **kwargs)
+            st.session_state['last_perf'] = profiler.output_text()
+        return result
+    return wrapper
 
-# UI Components
-st.markdown("""
-    <div style='text-align: center; padding: 2rem 0;'>
-        <h1 style='font-size: 3rem; margin: 0; text-shadow: 0 0 20px var(--quantum-blue);'>
-            <span style='color: var(--quantum-blue);'>QUANTUM</span>
-            <span style='color: var(--neon-purple);'>AI</span>
-        </h1>
-        <div style='color: rgba(255,255,255,0.3); margin-top: 0.5rem;'>
-            Quantum Cognitive Interface v2.3.1
+# Quantum UI Components
+def render_quantum_particles():
+    """Dynamic quantum particle effect"""
+    particle_html = """
+    <div class="quantum-particle" style="
+        top: {}%; left: {}%; 
+        width: {}px; height: {}px;
+        background: radial-gradient(circle, var(--quantum-blue), transparent);
+    "></div>
+    """
+    particles = "".join(
+        particle_html.format(
+            random.uniform(5, 95),
+            random.uniform(5, 95),
+            random.randint(50, 150),
+            random.randint(50, 150)
+        ) for _ in range(15)
+    )
+    st.markdown(f"<div style='pointer-events: none;'>{particles}</div>", unsafe_allow_html=True)
+
+# Quantum Interface
+def quantum_search_interface():
+    """Next-gen quantum search UI"""
+    st.markdown("""
+        <div style='text-align: center; padding: 2rem 0; position: relative;'>
+            <div class="quantum-text" style='
+                font-size: 4rem;
+                background: linear-gradient(45deg, var(--quantum-blue), var(--neon-purple));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin: 1rem 0;
+            '>
+                QUANTUM MATRIX v3.1
+            </div>
+            <div style='position: absolute; width: 100%; height: 100%; top: 0; left: 0;'>
+                {particles}
+            </div>
         </div>
-    </div>
-""", unsafe_allow_html=True)
+    """.format(particles=render_quantum_particles()), unsafe_allow_html=True)
 
-# Search Interface
-with st.form("quantum_search"):
-    col1, col2 = st.columns([5, 1])
-    with col1:
+    with st.form("quantum_matrix"):
         query = st.text_input("", 
-                            placeholder="[ ENTER QUANTUM QUERY ]", 
-                            key="search", 
+                            placeholder="[ INITIALIZE QUANTUM QUERY ]", 
+                            key="quantum_search",
                             label_visibility="collapsed")
-    with col2:
-        submitted = st.form_submit_button("🌌 SEARCH")
+        
+        col1, col2, col3 = st.columns([3,1,1])
+        with col2:
+            submitted = st.form_submit_button("🌠 QUANTUM LEAP")
+        with col3:
+            st.form_submit_button("⚡ HYPER MODE")
 
-# Real-time Suggestions
-if query and not submitted:
-    with st.spinner('🌀 Entangling quantum states...'):
-        suggestions = get_suggestions(query)
-        st.markdown("""
-            <div style='display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0;'>
-                <div style='color: var(--quantum-blue); padding: 0.3rem 0.8rem; border: 1px solid var(--quantum-blue); border-radius: 15px;'>
-                    Suggestions:
-                </div>
-                {}
-            </div>
-        """.format("".join(
-            [f"<div style='color: #fff; padding: 0.3rem 0.8rem; background: rgba(0, 243, 255, 0.2); border-radius: 15px;'>{s}</div>" 
-             for s in suggestions]
-        )), unsafe_allow_html=True)
+    if submitted and query:
+        with st.spinner('🌀 Collapsing quantum wave function...'):
+            start_time = time.perf_counter()
+            
+            # Async search execution
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            results = loop.run_until_complete(execute_quantum_search(query))
+            
+            # Quantum metrics
+            search_duration = time.perf_counter() - start_time
+            certainty = max(0, min(99, int(95 - (search_duration*10))))
+            
+            # Render quantum results
+            with st.container():
+                st.experimental_set_query_params(q=query)
+                render_quantum_results(results, search_duration, certainty)
 
-# Search Execution
-if submitted and query:
-    start_time = time.time()
+# Quantum Results Renderer
+def render_quantum_results(results, duration, certainty):
+    """Holographic results display"""
+    # Quantum Metrics Matrix
+    with st.expander("QUANTUM METRICS MATRIX", expanded=True):
+        cols = st.columns(4)
+        cols[0].metric("Temporal Flux", f"{duration:.3f}s", "±0.001s")
+        cols[1].metric("Qubit Entanglement", len(results), "±3σ")
+        cols[2].metric("Certainty Factor", f"{certainty}%", "±2.5%")
+        cols[3].metric("Dimensional Shift", f"{len(results)*0.73:.2f}δ", "±0.05δ")
+
+    # Quantum Results Grid
+    with st.container():
+        grid = st.columns(3)
+        for idx, result in enumerate(results):
+            with grid[idx % 3]:
+                with st.container():
+                    st.markdown(f"""
+                        <a href="{result['href']}" target="_blank" style="text-decoration: none;">
+                            <div class='result-card' style='
+                                border-image: linear-gradient(45deg, 
+                                    var(--quantum-blue), 
+                                    var(--neon-purple)) 1;
+                                animation-delay: {idx*0.1}s;
+                            '>
+                                <div style='
+                                    color: var(--quantum-blue);
+                                    font-size: 1.2rem;
+                                    margin-bottom: 0.5rem;
+                                '>
+                                    {result['title']}
+                                </div>
+                                <div style='
+                                    color: rgba(0, 243, 255, 0.8);
+                                    font-size: 0.7rem;
+                                    margin-bottom: 0.5rem;
+                                    word-break: break-all;
+                                '>
+                                    {result['href']}
+                                </div>
+                                <div style='
+                                    color: rgba(255,255,255,0.9);
+                                    font-size: 0.8rem;
+                                '>
+                                    {result['body'][:120]}...
+                                </div>
+                            </div>
+                        </a>
+                    """, unsafe_allow_html=True)
+
+# Quantum Main Execution
+if __name__ == "__main__":
+    quantum_search_interface()
     
-    with st.spinner('⚛️ Collapsing quantum probabilities...'):
-        results = execute_search(query)
-        search_duration = time.time() - start_time
-        
-        # Metrics
-        st.markdown(f"""
-            <div class='metric-panel'>
-                <div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;'>
-                    <div>
-                        <div style='color: rgba(255,255,255,0.6); font-size: 0.8rem;'>Qubits</div>
-                        <div style='color: var(--quantum-blue); font-size: 1.5rem;'>{len(results)}</div>
-                    </div>
-                    <div>
-                        <div style='color: rgba(255,255,255,0.6); font-size: 0.8rem;'>Duration</div>
-                        <div style='color: var(--quantum-blue); font-size: 1.5rem;'>{search_duration:.2f}s</div>
-                    </div>
-                    <div>
-                        <div style='color: rgba(255,255,255,0.6); font-size: 0.8rem;'>Certainty</div>
-                        <div style='color: var(--quantum-blue); font-size: 1.5rem;'>{min(99, int(95 - (search_duration*10)))}%</div>
-                    </div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Recommendations
-        recommendations = generate_recommendations(query, results)
-        st.markdown("""
-            <div style='display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0;'>
-                <div style='color: var(--neon-purple); padding: 0.3rem 0.8rem; border: 1px solid var(--neon-purple); border-radius: 15px;'>
-                    Recommendations:
-                </div>
-                {}
-            </div>
-        """.format("".join(
-            [f"<div style='color: #fff; padding: 0.3rem 0.8rem; background: rgba(188, 19, 254, 0.2); border-radius: 15px;'>{r[:25]}</div>" 
-             for r in recommendations]
-        )), unsafe_allow_html=True)
-        
-        # Results
-        for result in results:
-            st.markdown(f"""
-                <a href="{result['href']}" target="_blank" style="text-decoration: none;">
-                    <div class='result-card'>
-                        <div style='color: var(--quantum-blue); font-size: 1.1rem; margin-bottom: 0.5rem;'>
-                            {result['title']}
-                        </div>
-                        <div style='color: rgba(0, 243, 255, 0.8); font-size: 0.8rem; margin-bottom: 0.5rem;'>
-                            {result['href']}
-                        </div>
-                        <div style='color: rgba(255,255,255,0.9); font-size: 0.9rem;'>
-                            {result['body'][:150]}...
-                        </div>
-                    </div>
-                </a>
-            """, unsafe_allow_html=True)
+    # Quantum Observability
+    if st.secrets.get("OBSERVABILITY", False):
+        from streamlit_observability import observability
+        observability(log_level="INFO")
