@@ -4,7 +4,7 @@ import time
 import hashlib
 from sentence_transformers import SentenceTransformer
 import numpy as np
-
+import random
 # Streamlit Config
 st.set_page_config(
     page_title="OMEGA SEARCH",
