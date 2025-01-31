@@ -5,6 +5,14 @@ import hashlib
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
+# Streamlit Config
+st.set_page_config(
+    page_title="OMEGA SEARCH",
+    page_icon="🔍",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
 # Configuration
 MAX_RESULTS = 12
 MODEL_NAME = "all-MiniLM-L6-v2"
@@ -16,14 +24,6 @@ def load_model():
     return SentenceTransformer(MODEL_NAME)
 
 encoder = load_model()
-
-# Streamlit Config
-st.set_page_config(
-    page_title="OMEGA SEARCH",
-    page_icon="🔍",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
 
 # Cybernetic UI CSS
 st.markdown(f"""
