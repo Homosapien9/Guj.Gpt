@@ -294,7 +294,7 @@ st.markdown(f"""
                 top: ${{math.random()*120}}%;
                 left: ${{math.random()*120}}%;
                 width: ${{math.random()*15+5}}px;
-                height: ${math.random()*15+5}}px;
+                height: ${{math.random()*15+5}}px;
                 animation-delay: ${{math.random()*10}}s;
                 animation-duration: ${{math.random()*15+5}}s;
                 filter: blur(${{math.random()*3+1}}px);
