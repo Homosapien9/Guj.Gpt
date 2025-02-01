@@ -6,7 +6,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 import re
 import json
 import random
-import math
 
 # Streamlit Config
 st.set_page_config(
@@ -16,31 +15,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Configuration
-MAX_RESULTS = 21
-MODEL_NAME = "all-mpnet-base-v2"  # More accurate model
-SAFESEARCH = "strict"
-CACHE_TTL = 3600
-ADULT_KEYWORDS = [
-    "18+", "xvideos", "pornhub", "adult", "explicit", "NSFW", 
-    "sex", "porn", "erotic", "nude", "camgirl", "adultfilms", 
-    "xxx", "fetish", "adultmovies", "sexvideos", "dirtytalk", 
-    "hardcore", "submissive", "dominant", "stripper", 
-    "xxxvideos", "sexchat", "pornstar", "swinger", "bdsm", "masturbation",
-    "nudity", "hardcoreporn", "sexuallyexplicit", "shemale", "furry", 
-    "incest", "lesbian", "gayporn", "hentai", "adulttoy", "sexshop",
-    "threesome", "orgy", "webcamgirls", "toys", "fetishvideos", "roleplay",
-    "sexuallycharged", "xxxstreaming", "pornhubpremium", "nsfwcontent", "adultwebsites"
+# Load SentenceTransformer model for auto-recommendation
+model = SentenceTransformer('all-mpnet-base-v2')
+
+# Default prompts to match with
+DEFAULT_PROMPTS = [
+    "Quantum Computing Trends", 
+    "AI Ethics Framework", 
+    "Neural Network Optimization", 
+    "The Future of Artificial Intelligence", 
+    "Quantum Entanglement and Communication"
 ]
 
-NEURAL_LAYERS = 256
-QUANTUM_PARTICLES = 100
-DEFAULT_PROMPTS = ["Quantum Computing Trends", "AI Ethics Framework", "Neural Network Optimization"]
+# Function for getting the most similar prompts based on entered input
+def get_similar_prompts(query, prompts):
+    query_embedding = model.encode([query])
+    prompt_embeddings = model.encode(prompts)
+    similarities = cosine_similarity(query_embedding, prompt_embeddings)
+    top_indices = np.argsort(similarities[0])[::-1]
+    top_prompts = [prompts[i] for i in top_indices[:3]]
+    return top_prompts
 
-# Cybernetic Design System 2.0 with Animations
+# Hyper-Modern Cybernetic Design System 7.0 with Floating Elements and Dynamic Particles
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Major+Mono+Display&family=Exo+2:wght@300&family=Ubuntu+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Exo+2:wght@300&display=swap');
     
     :root {{
         --void-black: #000000;
@@ -50,11 +49,15 @@ st.markdown(f"""
         --hologram-glow: rgba(255,0,60,0.3);
         --matrix-pulse: #00FF9D;
         --quantum-blue: #00f3ff;
+        --cyber-light: rgba(255, 255, 255, 0.7);
+        --neon-pink: #FF2B6D;
     }}
     
     * {{
         font-family: 'Exo 2', sans-serif;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }}
     
     body {{
@@ -64,6 +67,11 @@ st.markdown(f"""
             #2a0014 100%);
         color: var(--cyber-steel);
         overflow-x: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
     }}
     
     .quantum-particle {{
@@ -76,22 +84,28 @@ st.markdown(f"""
     }}
     
     @keyframes particle-drift {{
-        0% {{ transform: translate(0, 0); }}
-        100% {{ transform: translate(100vw, 100vh); }}
+        0% {{
+            transform: translate(0, 0);
+        }}
+        100% {{
+            transform: translate(100vw, 100vh);
+        }}
     }}
     
     .cyber-core {{
         position: relative;
         padding: 2rem;
-        background: rgba(0, 0, 0, 0.95);
+        background: rgba(0, 0, 0, 0.85);
         backdrop-filter: blur(35px);
-        border: 1px solid var(--quantum-crimson);
-        border-radius: 25px;
+        border-radius: 20px;
         box-shadow: 0 0 80px var(--hologram-glow);
-        margin: 2rem auto;
-        width: 90%;
+        width: 100%;
+        max-width: 600px;
         transform-style: preserve-3d;
         animation: fadeInUp 1.5s ease-out;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }}
     
     @keyframes fadeInUp {{
@@ -106,17 +120,19 @@ st.markdown(f"""
     }}
     
     .quantum-input {{
-        background: rgba(0, 0, 0, 0.95) !important;
-        border: 2px solid var(--quantum-crimson) !important;
-        border-radius: 20px !important;
+        background: rgba(0, 0, 0, 0.85) !important;
+        border: none;
+        border-radius: 20px;
         padding: 1.8rem !important;
-        font-size: 1.6rem !important;
+        font-size: 2rem !important;
         color: var(--cyber-steel) !important;
-        margin: 3rem auto;
-        width: 80%;
+        width: 100%;
+        text-align: center;
         transition: all 0.4s ease;
         text-shadow: 0 0 15px var(--quantum-crimson);
         animation: pulse 1s infinite alternate;
+        margin-bottom: 2rem;
+        margin-top: 1rem;
     }}
     
     @keyframes pulse {{
@@ -130,63 +146,26 @@ st.markdown(f"""
     
     .quantum-input:focus {{
         box-shadow: 0 0 50px var(--hologram-glow);
-        border: 2px solid var(--quantum-blue) !important;
+        border: 2px solid var(--quantum-blue);
+        outline: none;
     }}
     
-    .hologram-card {{
-        background: linear-gradient(145deg, 
-            rgba(20, 0, 0, 0.95), 
-            rgba(40, 0, 20, 0.85));
-        border: 1px solid var(--quantum-crimson);
-        border-radius: 20px;
-        padding: 2.5rem;
-        margin: 2rem 0;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s ease;
-        transform-style: preserve-3d;
-        animation: zoomIn 1s ease-out;
-    }}
-    
-    @keyframes zoomIn {{
-        0% {{
-            transform: scale(0.8);
-            opacity: 0;
-        }}
-        100% {{
-            transform: scale(1);
-            opacity: 1;
-        }}
-    }}
-    
-    .neural-suggestion {{
-        background: linear-gradient(45deg, #2a0014, #1a000a);
-        border: 1px solid var(--quantum-blue);
-        border-radius: 30px;
-        padding: 1.2rem 2.4rem;
-        margin: 1rem;
+    .quantum-button {{
+        background: linear-gradient(145deg, var(--quantum-crimson), var(--neon-violet));
+        color: var(--cyber-steel);
+        border: none;
+        padding: 1.5rem 3rem;
+        font-size: 1.6rem;
+        border-radius: 40px;
         cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        animation: swing 2s ease-in-out infinite;
+        margin-top: 2rem;
+        box-shadow: 0 0 20px var(--quantum-blue);
+        transition: 0.3s ease-in-out;
     }}
     
-    @keyframes swing {{
-        0% {{
-            transform: rotate(0deg);
-        }}
-        50% {{
-            transform: rotate(10deg);
-        }}
-        100% {{
-            transform: rotate(0deg);
-        }}
-    }}
-    
-    .neural-suggestion:hover {{
-        transform: scale(1.08) rotate(2deg);
-        box-shadow: 0 0 40px rgba(0, 243, 255, 0.3);
+    .quantum-button:hover {{
+        transform: scale(1.05);
+        box-shadow: 0 0 30px var(--quantum-blue);
     }}
     
     .quantum-loader {{
@@ -207,70 +186,44 @@ st.markdown(f"""
         }}
     }}
     
-    .cyber-divider {{
-        height: 3px;
-        background: linear-gradient(90deg, 
-            transparent, 
-            var(--quantum-crimson), 
-            var(--quantum-blue), 
-            transparent);
-        margin: 3rem 0;
-        animation: divider-pulse 3s ease infinite;
-    }}
-    
-    @keyframes divider-pulse {{
-        0% {{ opacity: 0.5; }}
-        50% {{ opacity: 1; }}
-        100% {{ opacity: 0.5; }}
-    }}
-    
-    .quantum-metric {{
-        background: rgba(0, 0, 0, 0.7);
-        border: 1px solid var(--quantum-blue);
-        border-radius: 15px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-    }}
-    
-    .quantum-metric::before {{
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(0, 243, 255, 0.1),
-            transparent
-        );
-        animation: metric-scan 3s infinite;
-    }}
-    
-    @keyframes metric-scan {{
-        0% {{ left: -100%; }}
-        100% {{ left: 100%; }}
-    }}
-    
     </style>
 """, unsafe_allow_html=True)
 
 # UI components for the Streamlit app
 st.markdown("# Welcome to IRA QNTM 🌌")
-st.markdown("Explore the world of quantum computing and artificial intelligence.")
-st.markdown("Enter a prompt and get insightful results.")
+st.markdown("**Explore the quantum future with AI and technology.**")
+st.markdown("Type a prompt, and auto-recommendations based on AI insights will be provided instantly.")
 
-prompt = st.text_input("Enter your prompt here:", value=DEFAULT_PROMPTS[0], key="prompt_input")
+# User input
+prompt = st.text_input("Enter a quantum or AI topic to explore:", value="", key="prompt_input", label_visibility="collapsed")
+
+# Show entered text
 if prompt:
     st.markdown(f"**You entered:** `{prompt}`")
 
-# Button for generating quantum suggestions
-if st.button("Generate Suggestions"):
-    st.markdown("### Quantum Suggestions")
-    st.markdown("These suggestions are based on the latest AI models.")
+    # Display a spinning loader while generating recommendations
+    with st.spinner("Generating quantum insights... Please wait..."):
+        time.sleep(1)
 
-    suggestions = random.sample(DEFAULT_PROMPTS, 3)
-    for suggestion in suggestions:
-        st.markdown(f"**{suggestion}**")
+    # Get auto-recommendations using semantic similarity
+    recommended_prompts = get_similar_prompts(prompt, DEFAULT_PROMPTS)
+    st.markdown("### Quantum Recommendations:")
+    
+    for i, rec in enumerate(recommended_prompts):
+        st.markdown(f"**{i + 1}. {rec}**")
+
+# Add a "Generate Insights" button
+if st.button("Generate Quantum Insights"):
+    with st.spinner("Unlocking insights... Please wait..."):
+        time.sleep(2)
+    
+    st.markdown("### Quantum Insights")
+    insights = random.sample([
+        "Quantum computing could make current encryption methods obsolete, pushing for new cryptographic algorithms.",
+        "AI is on the brink of revolutionizing healthcare through quantum-enhanced machine learning models.",
+        "In the next decade, quantum networks might enable unbreakable communication channels.",
+    ], 3)
+    
+    for insight in insights:
+        st.markdown(f"**💡 {insight}**")
+
