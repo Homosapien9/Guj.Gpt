@@ -1,7 +1,14 @@
 import streamlit as st
 import time
 import random
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from duckduckgo_search import ddg
 from streamlit.components.v1 import html
+import aiohttp
+import asyncio
+from pyinstrument import Profiler
 
 # Singularity Configuration
 st.set_page_config(
@@ -209,6 +216,18 @@ document.addEventListener('mousemove', (e) => {
 </script>
 """)
 
+# Load Sentence Transformer Model
+@st.cache_resource
+def load_model():
+    return SentenceTransformer('all-MiniLM-L6-v2')
+
+model = load_model()
+
+# Async DuckDuckGo Search
+async def search_web(query):
+    results = ddg(query, max_results=5)
+    return results
+
 # IRA AI Interface Core
 with st.container():
     st.markdown("""
@@ -242,102 +261,67 @@ with st.container():
 # Quantum Response Sequence
 if query:
     with st.spinner("SYNCHRONIZING NEURAL MATRICES..."):
-        html("""
-            <div style="
-                width: 200px;
-                height: 200px;
-                margin: 2rem auto;
-                position: relative;
-                transform-style: preserve-3d;
-                animation: quantum-spin 4s linear infinite;
-            ">
+        # Profile the search and processing
+        profiler = Profiler()
+        profiler.start()
+
+        # Perform DuckDuckGo search
+        search_results = asyncio.run(search_web(query))
+        
+        # Encode query and results
+        query_embedding = model.encode([query])
+        result_embeddings = model.encode([result['title'] + " " + result['body'] for result in search_results])
+        
+        # Calculate cosine similarity
+        similarities = cosine_similarity(query_embedding, result_embeddings)[0]
+        
+        profiler.stop()
+        
+        # Display results
+        st.markdown("### QUANTUM SEARCH RESULTS")
+        for i, result in enumerate(search_results):
+            st.markdown(f"""
+                <div style="
+                    background: rgba(0,0,0,0.5);
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin: 1rem 0;
+                ">
+                    <h3 style="color: #00FFEA;">{result['title']}</h3>
+                    <p style="color: #FF00AA;">{result['body']}</p>
+                    <p style="color: #2A00FF;">Similarity: {similarities[i]:.2f}</p>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        # Display profiling results
+        st.markdown("### PERFORMANCE ANALYSIS")
+        st.text(profiler.output_text(unicode=True, color=True))
+
+# Quantum Grid Visualization
+with st.container():
+    st.markdown("""
+        <div class="quantum-grid">
+            <div class="data-stream">
                 <div style="
                     position: absolute;
                     width: 100%;
-                    height: 100%;
-                    border: 3px solid #2A00FF;
-                    border-radius: 50%;
-                    filter: blur(10px);
-                    animation: pulse 2s ease-in-out infinite;
-                "></div>
-                <div style="
-                    position: absolute;
-                    width: 70%;
-                    height: 70%;
-                    top: 15%;
-                    left: 15%;
-                    border: 3px solid #FF00AA;
-                    border-radius: 50%;
-                    filter: blur(5px);
-                    animation: pulse 2s ease-in-out infinite -1s;
+                    height: 200%;
+                    background: repeating-linear-gradient(
+                        90deg,
+                        transparent,
+                        transparent 20px,
+                        rgba(0,255,234,0.1) 21px,
+                        rgba(0,255,234,0.1) 40px
+                    );
+                    animation: matrix-fall 15s linear infinite;
                 "></div>
             </div>
-            
-            <style>
-            @keyframes quantum-spin {
-                0% { transform: rotate(0deg) scale(1); }
-                100% { transform: rotate(360deg) scale(1.5); }
-            }
-            @keyframes pulse {
-                0% { opacity: 0.2; transform: scale(0.8); }
-                50% { opacity: 1; transform: scale(1.2); }
-                100% { opacity: 0.2; transform: scale(0.8); }
-            }
-            </style>
-        """)
-        time.sleep(2)
-
-    # Neural Response Grid
-    with st.container():
-        st.markdown("""
-            <div class="quantum-grid">
-                <div class="data-stream">
-                    <div style="
-                        position: absolute;
-                        width: 100%;
-                        height: 200%;
-                        background: repeating-linear-gradient(
-                            90deg,
-                            transparent,
-                            transparent 20px,
-                            rgba(0,255,234,0.1) 21px,
-                            rgba(0,255,234,0.1) 40px
-                        );
-                        animation: matrix-fall 15s linear infinite;
-                    "></div>
-                </div>
-                
-                <div style="
-                    position: relative;
-                    height: 600px;
-                    background: radial-gradient(circle, 
-                        rgba(255,0,170,0.05) 0%, 
-                        rgba(0,0,0,0.95) 70%);
-                ">
-                    <div style="
-                        position: absolute;
-                        width: 200%;
-                        height: 200%;
-                        background: repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 20px,
-                            rgba(255,0,170,0.05) 21px,
-                            rgba(255,0,170,0.05) 40px
-                        );
-                        animation: grid-scan 20s linear infinite;
-                    "></div>
-                </div>
-            </div>
-            
-            <style>
-            @keyframes matrix-fall {
-                0% { transform: translateY(-100%); }
-                100% { transform: translateY(0%); }
-            }
-            @keyframes grid-scan {
-                0% { transform: translate(-50%, -50%); }
-                100% { transform: translate(0%, 0%); }
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        </div>
+        
+        <style>
+        @keyframes matrix-fall {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(0%); }
+        }
+        </style>
+    """, unsafe_allow_html=True)
