@@ -21,7 +21,7 @@ MAX_RESULTS = 21
 MODEL_NAME = "all-MiniLM-L6-v2"
 SAFESEARCH = "strict"
 CACHE_TTL = 3600
-ADULT_KEYWORDS = [18+,xvideos,pornhub]  # Your 500+ keyword list here
+ADULT_KEYWORDS = [18+]  # Your 500+ keyword list here
 NEURAL_LAYERS = 16
 QUANTUM_PARTICLES = 50
 
