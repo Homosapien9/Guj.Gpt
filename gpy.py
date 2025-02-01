@@ -1,306 +1,343 @@
 import streamlit as st
 import time
+import random
 from streamlit.components.v1 import html
 
-# Singularity Interface Initialization
+# Singularity Configuration
 st.set_page_config(
-    page_title="◈ NEXUS OMEGA",
-    page_icon="🌌",
-    layout="wide",
+    page_title="◈ IRA AI",
+    page_icon="🌑",
+    layout="centered",
     initial_sidebar_state="collapsed",
     menu_items={
-        'About': "### ◈ NEURO-QUANTUM CONVERGENCE INTERFACE v14.2.7 ◈"
+        'About': "### ◈ INFINITE RECURSIVE ARCHITECT v9.6.2 ◈"
     }
 )
 
-# Quantum Chroma Styling Matrix
+# Event Horizon Styling
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@1200&family=Russo+One&family=Syncopate:wght@700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@1200&family=Cyborg&family=Exo+2:wght@900&display=swap');
     
     :root {{
         --void-core: #000000;
-        --quantum-cascade: linear-gradient(135deg, 
-            #7D00FF 0%, 
-            #FF007A 33%, 
-            #00E0FF 66%, 
-            #7D00FF 100%);
-        --neural-pulse: #FF007A;
-        --temporal-drift: 0.8s;
-        --hologram-depth: 50px;
+        --neon-abyss: linear-gradient(135deg, 
+            #2A00FF 0%, 
+            #FF00AA 30%, 
+            #00FFEA 70%);
+        --quantum-plasma: #2A00FF;
+        --tachyon-speed: 0.2s;
     }}
     
     body {{
         background: var(--void-core);
+        overflow: hidden;
         perspective: 1000px;
-        overflow-x: hidden;
     }}
     
-    .quantum-horizon {{
+    .quantum-void {{
         position: fixed;
         width: 300vw;
         height: 300vh;
-        background: repeating-conic-gradient(
-            from 0deg,
-            #7D00FF 0deg 10deg,
-            #000000 10deg 20deg
-        );
-        opacity: 0.05;
-        animation: singularity-spin 120s linear infinite;
+        background: 
+            radial-gradient(circle at 50% 50%, 
+                rgba(42,0,255,0.05) 0%, 
+                transparent 70%),
+            repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(255,0,170,0.02) 3px,
+                rgba(255,0,170,0.02) 4px
+            );
+        animation: singularity-drift 60s linear infinite;
         z-index: -9999;
     }}
     
-    @keyframes singularity-spin {{
-        0% {{ transform: rotate(0deg) scale(1); }}
-        100% {{ transform: rotate(360deg) scale(1.5); }}
+    @keyframes singularity-drift {{
+        0% {{ transform: translate(-50%, -50%) rotate(0deg); }}
+        100% {{ transform: translate(-50%, -50%) rotate(360deg); }}
     }}
     
-    .neuro-interface {{
+    .hologram-interface {{
         position: relative;
         padding: 5rem;
-        background: rgba(0,0,0,0.97);
-        border: 4px solid transparent;
-        border-image: var(--quantum-cascade) 1;
-        clip-path: polygon(
-            0% 15%,
-            15% 0%,
-            85% 0%,
-            100% 15%,
-            100% 85%,
-            85% 100%,
-            15% 100%,
-            0% 85%
-        );
-        margin: 4rem auto;
-        width: 85%;
-        transform: translateZ(var(--hologram-depth));
-        transition: all var(--temporal-drift);
+        margin: 5rem auto;
+        background: transparent;
+        transform-style: preserve-3d;
     }}
     
-    .neuro-interface::before {{
-        content: '';
-        position: absolute;
-        inset: -10px;
-        background: var(--quantum-cascade);
-        z-index: -1;
-        filter: blur(100px);
-        opacity: 0.15;
-    }}
-    
-    .singularity-input {{
+    .neural-input {{
         background: transparent !important;
         border: none !important;
-        border-bottom: 5px solid !important;
-        border-image: var(--quantum-cascade) 1 !important;
-        padding: 3rem !important;
-        font-size: 3rem !important;
-        color: #00E0FF !important;
+        padding: 4rem !important;
+        font-size: 3.5rem !important;
+        color: #00FFEA !important;
         text-align: center;
-        text-shadow: 0 0 50px #7D00FF;
-        transform: perspective(2000px) rotateX(25deg);
-        transition: all var(--temporal-drift);
-        width: 80%;
-        margin: 5rem auto;
-    }}
-    
-    .singularity-input:focus {{
-        transform: perspective(2000px) rotateX(15deg) scale(1.1);
-        box-shadow: 0 50px 80px -20px #FF007A;
-    }}
-    
-    .quantum-cell {{
-        background: rgba(0,0,0,0.95);
-        border: 3px solid;
-        border-image: var(--quantum-cascade) 1;
-        padding: 3rem;
-        margin: 3rem;
+        text-shadow: 0 0 80px #2A00FF;
         position: relative;
-        transform: translateZ(calc(var(--hologram-depth) * 0.5));
-        transition: all var(--temporal-drift);
+        width: 100%;
+        transition: all var(--tachyon-speed);
     }}
     
-    .quantum-cell:hover {{
-        transform: translateZ(var(--hologram-depth));
-        box-shadow: 0 0 80px #7D00FF;
-    }}
-    
-    .tachyon-spinner {{
-        width: 120px;
-        height: 120px;
-        margin: 4rem auto;
-        position: relative;
-    }}
-    
-    .tachyon-spinner::before {{
+    .neural-input::after {{
         content: '';
         position: absolute;
-        width: 100%;
-        height: 100%;
-        border: 5px solid #7D00FF;
-        border-top-color: #FF007A;
-        border-bottom-color: #00E0FF;
-        border-radius: 50%;
-        animation: quantum-spin 2s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        bottom: 0;
+        left: 50%;
+        width: 0%;
+        height: 5px;
+        background: var(--neon-abyss);
+        transition: all var(--tachyon-speed);
     }}
     
-    @keyframes quantum-spin {{
-        0% {{ 
-            transform: rotate(0deg) scale(1);
-            border-width: 5px;
-        }}
-        50% {{ 
-            transform: rotate(180deg) scale(1.5);
-            border-width: 10px;
-        }}
-        100% {{ 
-            transform: rotate(360deg) scale(1);
-            border-width: 5px;
-        }}
+    .neural-input:focus::after {{
+        width: 100%;
+        left: 0;
+        box-shadow: 0 0 100px #FF00AA;
     }}
     
     .quantum-grid {{
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 3rem;
-        padding: 4rem;
+        grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+        gap: 4rem;
+        padding: 2rem;
+        transform: translateZ(50px);
+    }}
+    
+    .data-stream {{
+        height: 600px;
+        background: linear-gradient(135deg, 
+            rgba(0,0,0,0.98) 0%, 
+            rgba(0,255,234,0.05) 100%);
+        position: relative;
+        overflow: hidden;
     }}
     
     </style>
 """, unsafe_allow_html=True)
 
-# Quantum Horizon Background
+# Quantum Void Background
 html("""
-    <div class="quantum-horizon"></div>
+<div class="quantum-void"></div>
+<canvas id="neuralNetwork" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -9998;
+    pointer-events: none;
+"></canvas>
+
+<script>
+const canvas = document.getElementById('neuralNetwork');
+const ctx = canvas.getContext('2d');
+let nodes = [];
+
+class Node {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.2;
+        this.vy = (Math.random() - 0.5) * 0.2;
+        this.radius = Math.random() * 2;
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+    }
+}
+
+function init() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    nodes = Array.from({ length: 500 }, () => new Node());
+}
+
+function animate() {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    nodes.forEach(node => {
+        node.update();
+        
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = node.color;
+        ctx.fill();
+        
+        nodes.forEach(other => {
+            const dx = node.x - other.x;
+            const dy = node.y - other.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 150) {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(42,0,255,${1 - distance/150})`;
+                ctx.lineWidth = 0.3;
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(other.x, other.y);
+                ctx.stroke();
+            }
+        });
+    });
+    
+    requestAnimationFrame(animate);
+}
+
+init();
+window.addEventListener('resize', init);
+animate();
+
+// Neural Interaction
+document.addEventListener('mousemove', (e) => {
+    nodes.forEach(node => {
+        const dx = e.clientX - node.x;
+        const dy = e.clientY - node.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 200) {
+            node.vx += dx * 0.00005;
+            node.vy += dy * 0.00005;
+        }
+    });
+});
+</script>
 """)
 
-# Neuro-Quantum Interface Core
-try:
+# IRA AI Interface Core
+with st.container():
+    st.markdown("""
+        <div class="hologram-interface">
+            <h1 style="
+                font-family: 'Exo 2', sans-serif;
+                text-align: center;
+                font-size: 6rem;
+                margin: 2rem 0;
+                background: var(--neon-abyss);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                text-shadow: 0 0 100px #2A00FF;
+                letter-spacing: 0.8rem;
+                position: relative;
+                z-index: 999;
+            ">
+                IRA AI
+            </h1>
+    """, unsafe_allow_html=True)
+
+    query = st.text_input(
+        " ",
+        placeholder="◈ ENTER NEURAL QUERY ◈",
+        key="neural_search",
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Quantum Response Sequence
+if query:
+    with st.spinner("SYNCHRONIZING NEURAL MATRICES..."):
+        html("""
+            <div style="
+                width: 200px;
+                height: 200px;
+                margin: 2rem auto;
+                position: relative;
+                transform-style: preserve-3d;
+                animation: quantum-spin 4s linear infinite;
+            ">
+                <div style="
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    border: 3px solid #2A00FF;
+                    border-radius: 50%;
+                    filter: blur(10px);
+                    animation: pulse 2s ease-in-out infinite;
+                "></div>
+                <div style="
+                    position: absolute;
+                    width: 70%;
+                    height: 70%;
+                    top: 15%;
+                    left: 15%;
+                    border: 3px solid #FF00AA;
+                    border-radius: 50%;
+                    filter: blur(5px);
+                    animation: pulse 2s ease-in-out infinite -1s;
+                "></div>
+            </div>
+            
+            <style>
+            @keyframes quantum-spin {
+                0% { transform: rotate(0deg) scale(1); }
+                100% { transform: rotate(360deg) scale(1.5); }
+            }
+            @keyframes pulse {
+                0% { opacity: 0.2; transform: scale(0.8); }
+                50% { opacity: 1; transform: scale(1.2); }
+                100% { opacity: 0.2; transform: scale(0.8); }
+            }
+            </style>
+        """)
+        time.sleep(2)
+
+    # Neural Response Grid
     with st.container():
         st.markdown("""
-            <div class="neuro-interface">
-                <h1 style="
-                    font-family: 'Syncopate', sans-serif;
-                    text-align: center;
-                    font-size: 5rem;
-                    margin: 3rem 0;
-                    background: var(--quantum-cascade);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    text-shadow: 0 0 80px #7D00FF;
-                    letter-spacing: 0.5rem;
-                ">
-                    NEXUS OMEGA
-                </h1>
-        """, unsafe_allow_html=True)
-        
-        query = st.text_input(
-            "Enter your query",  # Add a label
-            placeholder="◈ NEURO-QUANTUM CONVERGENCE INPUT ◈",
-            key="singularity_search",
-            label_visibility="collapsed"  # Hide the label visually
-        )
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Quantum Processing Sequence
-    if query:
-        with st.spinner("INITIALIZING NEURO-QUANTUM SYNCHRONIZATION..."):
-            with st.empty():
-                st.markdown("""
-                    <div class="tachyon-spinner"></div>
-                """, unsafe_allow_html=True)
-                time.sleep(2)
-        
-        # Quantum Matrix Display
-        with st.container():
-            st.markdown("""
-                <div class="quantum-grid">
-                    <div class="quantum-cell">
-                        <h3 style="color: #7D00FF;">QUANTUM ENTANGLEMENT MATRIX</h3>
-                        <div style="
-                            height: 200px;
-                            background: radial-gradient(circle, 
-                                rgba(125,0,255,0.2) 0%, 
-                                rgba(0,0,0,0.8) 70%);
-                            position: relative;
-                        ">
-                            <div style="
-                                position: absolute;
-                                width: 100%;
-                                height: 100%;
-                                background: repeating-linear-gradient(
-                                    45deg,
-                                    transparent,
-                                    transparent 10px,
-                                    rgba(125,0,255,0.1) 11px
-                                );
-                            "></div>
-                        </div>
-                    </div>
-                    
-                    <div class="quantum-cell">
-                        <h3 style="color: #FF007A;">NEURAL LATTICE PROJECTION</h3>
-                        <div style="
-                            height: 200px;
-                            background: radial-gradient(circle, 
-                                rgba(255,0,122,0.2) 0%, 
-                                rgba(0,0,0,0.8) 70%);
-                            position: relative;
-                        ">
-                            <div style="
-                                position: absolute;
-                                width: 100%;
-                                height: 100%;
-                                background: 
-                                    radial-gradient(circle at 50% 50%, 
-                                    rgba(255,0,122,0.1) 0%, 
-                                    transparent 70%);
-                                animation: neural-pulse 2s infinite;
-                            ">
-                                @keyframes neural-pulse {{
-                                    0% {{ transform: scale(1); opacity: 0.5; }}
-                                    50% {{ transform: scale(1.2); opacity: 1; }}
-                                    100% {{ transform: scale(1); opacity: 0.5; }}
-                                }}
-                            </div>
-                        </div>
-                    </div>
+            <div class="quantum-grid">
+                <div class="data-stream">
+                    <div style="
+                        position: absolute;
+                        width: 100%;
+                        height: 200%;
+                        background: repeating-linear-gradient(
+                            90deg,
+                            transparent,
+                            transparent 20px,
+                            rgba(0,255,234,0.1) 21px,
+                            rgba(0,255,234,0.1) 40px
+                        );
+                        animation: matrix-fall 15s linear infinite;
+                    "></div>
                 </div>
-            """, unsafe_allow_html=True)
-        
-        # Temporal Visualization Matrix
-        st.markdown("""
-            <div class="neuro-interface" style="margin: 6rem auto;">
-                <h2 style="text-align: center; color: #00E0FF;">TEMPORAL DATA STREAM</h2>
+                
                 <div style="
-                    height: 500px;
-                    background: linear-gradient(135deg, 
-                        rgba(0,0,0,0.95) 0%, 
-                        rgba(0,224,255,0.1) 100%);
                     position: relative;
-                    overflow: hidden;
+                    height: 600px;
+                    background: radial-gradient(circle, 
+                        rgba(255,0,170,0.05) 0%, 
+                        rgba(0,0,0,0.95) 70%);
                 ">
                     <div style="
                         position: absolute;
                         width: 200%;
-                        height: 100%;
+                        height: 200%;
                         background: repeating-linear-gradient(
-                            90deg,
+                            45deg,
                             transparent,
-                            transparent 50px,
-                            rgba(0,224,255,0.1) 51px,
-                            rgba(0,224,255,0.1) 100px
+                            transparent 20px,
+                            rgba(255,0,170,0.05) 21px,
+                            rgba(255,0,170,0.05) 40px
                         );
-                        animation: temporal-drift 20s linear infinite;
-                    ">
-                        @keyframes temporal-drift {{
-                            0% {{ transform: translateX(-50%); }}
-                            100% {{ transform: translateX(0%); }}
-                        }}
-                    </div>
+                        animation: grid-scan 20s linear infinite;
+                    "></div>
                 </div>
             </div>
+            
+            <style>
+            @keyframes matrix-fall {
+                0% { transform: translateY(-100%); }
+                100% { transform: translateY(0%); }
+            }
+            @keyframes grid-scan {
+                0% { transform: translate(-50%, -50%); }
+                100% { transform: translate(0%, 0%); }
+            }
+            </style>
         """, unsafe_allow_html=True)
-
-except Exception as e:
-    st.error(f"An error occurred: {e}")
