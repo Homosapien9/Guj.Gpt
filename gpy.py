@@ -4,7 +4,7 @@ import random
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from duckduckgo_search import ddg
+from duckduckgo_search import ddg  # Updated import
 from streamlit.components.v1 import html
 import aiohttp
 import asyncio
@@ -225,8 +225,15 @@ model = load_model()
 
 # Async DuckDuckGo Search
 async def search_web(query):
-    results = ddg(query, max_results=5)
+    results = ddg(query, max_results=5)  # Updated usage
     return results
+
+# Real-Time Data Fetching (Example: Cryptocurrency Prices)
+async def fetch_live_data():
+    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
 
 # IRA AI Interface Core
 with st.container():
@@ -296,6 +303,12 @@ if query:
         # Display profiling results
         st.markdown("### PERFORMANCE ANALYSIS")
         st.text(profiler.output_text(unicode=True, color=True))
+
+# Real-Time Data Stream
+with st.container():
+    st.markdown("### REAL-TIME DATA STREAM")
+    live_data = asyncio.run(fetch_live_data())
+    st.write(live_data)
 
 # Quantum Grid Visualization
 with st.container():
