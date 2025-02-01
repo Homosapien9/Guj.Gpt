@@ -1,6 +1,5 @@
 import streamlit as st
 from duckduckgo_search import DDGS
-import time
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -38,7 +37,7 @@ NEURAL_LAYERS = 256
 QUANTUM_PARTICLES = 100
 DEFAULT_PROMPTS = ["Quantum Computing Trends", "AI Ethics Framework", "Neural Network Optimization"]
 
-# Cybernetic Design System 2.0
+# Cybernetic Design System 2.0 with Animations
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Major+Mono+Display&family=Exo+2:wght@300&family=Ubuntu+Mono&display=swap');
@@ -92,6 +91,18 @@ st.markdown(f"""
         margin: 2rem auto;
         width: 90%;
         transform-style: preserve-3d;
+        animation: fadeInUp 1.5s ease-out;
+    }}
+    
+    @keyframes fadeInUp {{
+        from {{
+            opacity: 0;
+            transform: translateY(50px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
     }}
     
     .quantum-input {{
@@ -105,6 +116,16 @@ st.markdown(f"""
         width: 80%;
         transition: all 0.4s ease;
         text-shadow: 0 0 15px var(--quantum-crimson);
+        animation: pulse 1s infinite alternate;
+    }}
+    
+    @keyframes pulse {{
+        0% {{
+            box-shadow: 0 0 10px var(--quantum-crimson);
+        }}
+        100% {{
+            box-shadow: 0 0 25px var(--quantum-blue);
+        }}
     }}
     
     .quantum-input:focus {{
@@ -124,51 +145,18 @@ st.markdown(f"""
         overflow: hidden;
         transition: all 0.4s ease;
         transform-style: preserve-3d;
+        animation: zoomIn 1s ease-out;
     }}
     
-    .hologram-card::before {{
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-            45deg,
-            transparent,
-            var(--quantum-crimson),
-            var(--neon-violet),
-            transparent
-        );
-        animation: quantum-scan 8s linear infinite;
-        opacity: 0.4;
-    }}
-    
-    .hologram-card::after {{
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(120deg, 
-            transparent 0%, 
-            rgba(255,0,60,0.1) 50%, 
-            transparent 100%);
-        animation: hologram-pulse 4s infinite;
-    }}
-    
-    @keyframes quantum-scan {{
-        0% {{ transform: rotate(0deg); }}
-        100% {{ transform: rotate(360deg); }}
-    }}
-    
-    @keyframes hologram-pulse {{
-        0% {{ opacity: 0.2; }}
-        50% {{ opacity: 0.4; }}
-        100% {{ opacity: 0.2; }}
-    }}
-    
-    .hologram-card:hover {{
-        transform: translateY(-8px) rotateX(5deg) rotateY(5deg) scale(1.05);
-        box-shadow: 0 0 80px var(--hologram-glow);
+    @keyframes zoomIn {{
+        0% {{
+            transform: scale(0.8);
+            opacity: 0;
+        }}
+        100% {{
+            transform: scale(1);
+            opacity: 1;
+        }}
     }}
     
     .neural-suggestion {{
@@ -181,27 +169,19 @@ st.markdown(f"""
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        animation: swing 2s ease-in-out infinite;
     }}
     
-    .neural-suggestion::before {{
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-            45deg,
-            transparent,
-            var(--quantum-blue),
-            transparent
-        );
-        animation: suggestion-glow 3s linear infinite;
-    }}
-    
-    @keyframes suggestion-glow {{
-        0% {{ transform: rotate(0deg); }}
-        100% {{ transform: rotate(360deg); }}
+    @keyframes swing {{
+        0% {{
+            transform: rotate(0deg);
+        }}
+        50% {{
+            transform: rotate(10deg);
+        }}
+        100% {{
+            transform: rotate(0deg);
+        }}
     }}
     
     .neural-suggestion:hover {{
@@ -216,6 +196,15 @@ st.markdown(f"""
         width: 60px;
         height: 60px;
         animation: spin 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }}
+    
+    @keyframes spin {{
+        0% {{
+            transform: rotate(0deg);
+        }}
+        100% {{
+            transform: rotate(360deg);
+        }}
     }}
     
     .cyber-divider {{
@@ -266,54 +255,22 @@ st.markdown(f"""
     }}
     
     </style>
-    
-    <div id="quantum-clock"></div>
-    <script>
-    function updateClock() {{
-        const options = {{ 
-            timeZone: 'UTC',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false 
-        }};
-        document.getElementById('quantum-clock').innerHTML = 
-            '⏳ ' + new Date().toLocaleTimeString('en-US', options) + ' UTC | ' +
-            Math.floor(Math.random()*9999) + ' QUBITS ENTANGLED';
-    }}
-    setInterval(updateClock, 1000);
-    updateClock();
-    
-    // Quantum particles 2.0
-    const createParticles = () => {{
-        const container = document.createElement('div');
-        for(let i=0; i<{QUANTUM_PARTICLES}; i++) {{
-            const particle = document.createElement('div');
-            particle.className = 'quantum-particle';
-            particle.style.cssText = `
-                top: ${{math.random()*120}}%;
-                left: ${{math.random()*120}}%;
-                width: ${{math.random()*15+5}}px;
-                height: ${{math.random()*15+5}}px;
-                animation-delay: ${{math.random()*10}}s;
-                animation-duration: ${{math.random()*15+5}}s;
-                filter: blur(${{math.random()*3+1}}px);
-            `;
-            container.appendChild(particle);
-        }}
-        document.body.appendChild(container);
-    }}
-    createParticles();
-    
-    // Quantum background effects
-    document.body.addEventListener('mousemove', (e) => {{
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
-        
-        document.documentElement.style.setProperty('--quantum-crimson', 
-            `hsl(${{x * 360}}, 100%, 50%)`);
-        document.documentElement.style.setProperty('--quantum-blue', 
-            `hsl(${{y * 360}}, 100%, 50%)`);
-    }});
-    </script>
 """, unsafe_allow_html=True)
+
+# UI components for the Streamlit app
+st.markdown("# Welcome to IRA QNTM 🌌")
+st.markdown("Explore the world of quantum computing and artificial intelligence.")
+st.markdown("Enter a prompt and get insightful results.")
+
+prompt = st.text_input("Enter your prompt here:", value=DEFAULT_PROMPTS[0], key="prompt_input")
+if prompt:
+    st.markdown(f"**You entered:** `{prompt}`")
+
+# Button for generating quantum suggestions
+if st.button("Generate Suggestions"):
+    st.markdown("### Quantum Suggestions")
+    st.markdown("These suggestions are based on the latest AI models.")
+
+    suggestions = random.sample(DEFAULT_PROMPTS, 3)
+    for suggestion in suggestions:
+        st.markdown(f"**{suggestion}**")
