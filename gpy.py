@@ -1,7 +1,6 @@
 import streamlit as st
 import time
 from streamlit.components.v1 import html
-import random
 
 # Singularity Interface Initialization
 st.set_page_config(
@@ -175,128 +174,133 @@ html("""
 """)
 
 # Neuro-Quantum Interface Core
-with st.container():
-    st.markdown("""
-        <div class="neuro-interface">
-            <h1 style="
-                font-family: 'Syncopate', sans-serif;
-                text-align: center;
-                font-size: 5rem;
-                margin: 3rem 0;
-                background: var(--quantum-cascade);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                text-shadow: 0 0 80px #7D00FF;
-                letter-spacing: 0.5rem;
-            ">
-                NEXUS OMEGA
-            </h1>
-    """, unsafe_allow_html=True)
-    
-    query = st.text_input(
-        "",
-        placeholder="◈ NEURO-QUANTUM CONVERGENCE INPUT ◈",
-        key="singularity_search",
-    )
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Quantum Processing Sequence
-if query:
-    with st.spinner("INITIALIZING NEURO-QUANTUM SYNCHRONIZATION..."):
-        with st.empty():
-            st.markdown("""
-                <div class="tachyon-spinner"></div>
-            """, unsafe_allow_html=True)
-            time.sleep(2)
-    
-    # Quantum Matrix Display
+try:
     with st.container():
         st.markdown("""
-            <div class="quantum-grid">
-                <div class="quantum-cell">
-                    <h3 style="color: #7D00FF;">QUANTUM ENTANGLEMENT MATRIX</h3>
-                    <div style="
-                        height: 200px;
-                        background: radial-gradient(circle, 
-                            rgba(125,0,255,0.2) 0%, 
-                            rgba(0,0,0,0.8) 70%);
-                        position: relative;
-                    ">
+            <div class="neuro-interface">
+                <h1 style="
+                    font-family: 'Syncopate', sans-serif;
+                    text-align: center;
+                    font-size: 5rem;
+                    margin: 3rem 0;
+                    background: var(--quantum-cascade);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    text-shadow: 0 0 80px #7D00FF;
+                    letter-spacing: 0.5rem;
+                ">
+                    NEXUS OMEGA
+                </h1>
+        """, unsafe_allow_html=True)
+        
+        query = st.text_input(
+            "Enter your query",  # Add a label
+            placeholder="◈ NEURO-QUANTUM CONVERGENCE INPUT ◈",
+            key="singularity_search",
+            label_visibility="collapsed"  # Hide the label visually
+        )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Quantum Processing Sequence
+    if query:
+        with st.spinner("INITIALIZING NEURO-QUANTUM SYNCHRONIZATION..."):
+            with st.empty():
+                st.markdown("""
+                    <div class="tachyon-spinner"></div>
+                """, unsafe_allow_html=True)
+                time.sleep(2)
+        
+        # Quantum Matrix Display
+        with st.container():
+            st.markdown("""
+                <div class="quantum-grid">
+                    <div class="quantum-cell">
+                        <h3 style="color: #7D00FF;">QUANTUM ENTANGLEMENT MATRIX</h3>
                         <div style="
-                            position: absolute;
-                            width: 100%;
-                            height: 100%;
-                            background: repeating-linear-gradient(
-                                45deg,
-                                transparent,
-                                transparent 10px,
-                                rgba(125,0,255,0.1) 11px
-                            );
-                        "></div>
+                            height: 200px;
+                            background: radial-gradient(circle, 
+                                rgba(125,0,255,0.2) 0%, 
+                                rgba(0,0,0,0.8) 70%);
+                            position: relative;
+                        ">
+                            <div style="
+                                position: absolute;
+                                width: 100%;
+                                height: 100%;
+                                background: repeating-linear-gradient(
+                                    45deg,
+                                    transparent,
+                                    transparent 10px,
+                                    rgba(125,0,255,0.1) 11px
+                                );
+                            "></div>
+                        </div>
+                    </div>
+                    
+                    <div class="quantum-cell">
+                        <h3 style="color: #FF007A;">NEURAL LATTICE PROJECTION</h3>
+                        <div style="
+                            height: 200px;
+                            background: radial-gradient(circle, 
+                                rgba(255,0,122,0.2) 0%, 
+                                rgba(0,0,0,0.8) 70%);
+                            position: relative;
+                        ">
+                            <div style="
+                                position: absolute;
+                                width: 100%;
+                                height: 100%;
+                                background: 
+                                    radial-gradient(circle at 50% 50%, 
+                                    rgba(255,0,122,0.1) 0%, 
+                                    transparent 70%);
+                                animation: neural-pulse 2s infinite;
+                            ">
+                                @keyframes neural-pulse {{
+                                    0% {{ transform: scale(1); opacity: 0.5; }}
+                                    50% {{ transform: scale(1.2); opacity: 1; }}
+                                    100% {{ transform: scale(1); opacity: 0.5; }}
+                                }}
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="quantum-cell">
-                    <h3 style="color: #FF007A;">NEURAL LATTICE PROJECTION</h3>
+            """, unsafe_allow_html=True)
+        
+        # Temporal Visualization Matrix
+        st.markdown("""
+            <div class="neuro-interface" style="margin: 6rem auto;">
+                <h2 style="text-align: center; color: #00E0FF;">TEMPORAL DATA STREAM</h2>
+                <div style="
+                    height: 500px;
+                    background: linear-gradient(135deg, 
+                        rgba(0,0,0,0.95) 0%, 
+                        rgba(0,224,255,0.1) 100%);
+                    position: relative;
+                    overflow: hidden;
+                ">
                     <div style="
-                        height: 200px;
-                        background: radial-gradient(circle, 
-                            rgba(255,0,122,0.2) 0%, 
-                            rgba(0,0,0,0.8) 70%);
-                        position: relative;
+                        position: absolute;
+                        width: 200%;
+                        height: 100%;
+                        background: repeating-linear-gradient(
+                            90deg,
+                            transparent,
+                            transparent 50px,
+                            rgba(0,224,255,0.1) 51px,
+                            rgba(0,224,255,0.1) 100px
+                        );
+                        animation: temporal-drift 20s linear infinite;
                     ">
-                        <div style="
-                            position: absolute;
-                            width: 100%;
-                            height: 100%;
-                            background: 
-                                radial-gradient(circle at 50% 50%, 
-                                rgba(255,0,122,0.1) 0%, 
-                                transparent 70%);
-                            animation: neural-pulse 2s infinite;
-                        ">
-                            @keyframes neural-pulse {{
-                                0% {{ transform: scale(1); opacity: 0.5; }}
-                                50% {{ transform: scale(1.2); opacity: 1; }}
-                                100% {{ transform: scale(1); opacity: 0.5; }}
-                            }}
-                        </div>
+                        @keyframes temporal-drift {{
+                            0% {{ transform: translateX(-50%); }}
+                            100% {{ transform: translateX(0%); }}
+                        }}
                     </div>
                 </div>
             </div>
         """, unsafe_allow_html=True)
-    
-    # Temporal Visualization Matrix
-    st.markdown("""
-        <div class="neuro-interface" style="margin: 6rem auto;">
-            <h2 style="text-align: center; color: #00E0FF;">TEMPORAL DATA STREAM</h2>
-            <div style="
-                height: 500px;
-                background: linear-gradient(135deg, 
-                    rgba(0,0,0,0.95) 0%, 
-                    rgba(0,224,255,0.1) 100%);
-                position: relative;
-                overflow: hidden;
-            ">
-                <div style="
-                    position: absolute;
-                    width: 200%;
-                    height: 100%;
-                    background: repeating-linear-gradient(
-                        90deg,
-                        transparent,
-                        transparent 50px,
-                        rgba(0,224,255,0.1) 51px,
-                        rgba(0,224,255,0.1) 100px
-                    );
-                    animation: temporal-drift 20s linear infinite;
-                ">
-                    @keyframes temporal-drift {{
-                        0% {{ transform: translateX(-50%); }}
-                        100% {{ transform: translateX(0%); }}
-                    }}
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+
+except Exception as e:
+    st.error(f"An error occurred: {e}")
