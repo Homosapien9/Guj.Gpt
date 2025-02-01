@@ -207,12 +207,12 @@ st.markdown(f"""
             const particle = document.createElement('div');
             particle.className = 'quantum-particle';
             particle.style.cssText = `
-                top: ${{Math.random()*100}}%;
-                left: ${{Math.random()*100}}%;
-                width: ${{Math.random()*10+2}}px;
-                height: ${{Math.random()*10+2}}px;
-                animation-delay: ${{Math.random()*5}}s;
-                animation-duration: ${{Math.random()*10+10}}s;
+                top: ${{math.random()*100}}%;
+                left: ${{math.random()*100}}%;
+                width: ${{math.random()*10+2}}px;
+                height: ${{math.random()*10+2}}px;
+                animation-delay: ${{math.random()*5}}s;
+                animation-duration: ${{math.random()*10+10}}s;
             `;
             container.appendChild(particle);
         }}
