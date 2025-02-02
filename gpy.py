@@ -283,7 +283,7 @@ def main():
     st.markdown("""
         <div style="text-align: center; margin: 5rem 0;">
             <h1 class="neon-text">
-                NEXUS COGNITION ENGINE
+                IRA AI
             </h1>
             <div style="border-bottom: 2px solid #8a2be2; width: 50%; margin: 0 auto;"></div>
         </div>
