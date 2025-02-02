@@ -5,12 +5,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 from duckduckgo_search import DDGS
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
+import math
 # --------------------------
-# QUANTUM INTERFACE ENGINE
+# PAGE CONFIGURATION
 # --------------------------
 st.set_page_config(
-    page_title="NEXUS AI",
+    page_title="IRA AI",
     page_icon="🌌",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -22,7 +22,7 @@ st.set_page_config(
 # --------------------------
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Ubuntu+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Russo+One&family=Zen+Dots&display=swap');
     
     :root {{
         --void-black: #0a0a12;
@@ -37,10 +37,11 @@ st.markdown(f"""
         background: var(--deep-space);
         overflow-x: hidden;
         min-height: 100vh;
-        font-family: 'Ubuntu Mono', monospace;
+        font-family: 'Russo One', sans-serif;
+        color: white;
     }}
     
-    /* Particle Horizon */
+    /* Interactive Particle Background */
     .particle-layer {{
         position: fixed;
         top: 0;
@@ -49,18 +50,7 @@ st.markdown(f"""
         height: 100%;
         pointer-events: none;
         z-index: -1;
-        background-image: 
-            radial-gradient(circle at 50% 50%, 
-                rgba(138,43,226,0.1) 0%, 
-                transparent 60%),
-            repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 3px,
-                rgba(138,43,226,0.1) 3px,
-                rgba(138,43,226,0.1) 6px
-            );
-        animation: space-drift 40s linear infinite;
+        background: radial-gradient(circle at 50% 50%, rgba(138,43,226,0.05), transparent 60%);
     }}
     
     /* Cyber Input Matrix */
@@ -82,23 +72,9 @@ st.markdown(f"""
         background: rgba(0, 0, 0, 0.3) !important;
     }}
     
-    /* Neural Pulse Animations */
-    @keyframes neural-pulse {{
-        0% {{ opacity: 0.2; transform: scale(1); }}
-        50% {{ opacity: 1; transform: scale(1.05); }}
-        100% {{ opacity: 0.2; transform: scale(1); }}
-    }}
-    
-    @keyframes space-drift {{
-        0% {{ background-position: 0 0; }}
-        100% {{ background-position: 1000px 1000px; }}
-    }}
-    
     /* Holographic Cards */
     .quantum-card {{
-        background: linear-gradient(145deg, 
-            rgba(18,0,31,0.9), 
-            rgba(10,10,18,0.9)) !important;
+        background: linear-gradient(145deg, rgba(18,0,31,0.9), rgba(10,10,18,0.9)) !important;
         padding: 2rem;
         margin: 2rem 0;
         position: relative;
@@ -107,6 +83,12 @@ st.markdown(f"""
         border-image: linear-gradient(45deg, #8a2be2, #00f3ff) 1;
         animation: card-float 6s ease-in-out infinite;
         backdrop-filter: blur(10px);
+        transform-style: preserve-3d;
+    }}
+    
+    .quantum-card:hover {{
+        transform: rotateX(10deg) rotateY(10deg) scale(1.05);
+        box-shadow: 0 0 50px rgba(138,43,226,0.5);
     }}
     
     @keyframes card-float {{
@@ -121,12 +103,7 @@ st.markdown(f"""
         left: -50%;
         width: 200%;
         height: 200%;
-        background: linear-gradient(
-            45deg,
-            transparent,
-            rgba(138,43,226,0.2),
-            transparent
-        );
+        background: linear-gradient(45deg, transparent, rgba(138,43,226,0.2), transparent);
         animation: matrix-scan 4s linear infinite;
     }}
     
@@ -135,48 +112,7 @@ st.markdown(f"""
         100% {{ transform: translate(50%, 50%) rotate(45deg) scale(2); }}
     }}
     
-    /* Cyber Suggestions */
-    .neon-suggestion {{
-        padding: 1.5rem;
-        margin: 1rem 0;
-        background: linear-gradient(90deg, 
-            rgba(138,43,226,0.1), 
-            rgba(0,243,255,0.05));
-        position: relative;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%);
-    }}
-    
-    .neon-suggestion:hover {{
-        background: linear-gradient(90deg, 
-            rgba(138,43,226,0.3), 
-            rgba(0,243,255,0.2));
-        transform: translateX(20px);
-    }}
-    
-    .neon-suggestion::after {{
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255,255,255,0.1),
-            transparent
-        );
-        animation: suggestion-glow 1.5s infinite;
-    }}
-    
-    @keyframes suggestion-glow {{
-        0% {{ left: -100%; }}
-        100% {{ left: 100%; }}
-    }}
-    
-    /* Holographic Loader */
+    /* Hologram Loader */
     .hologram-loader {{
         width: 80px;
         height: 80px;
@@ -202,12 +138,115 @@ st.markdown(f"""
         50% {{ transform: rotate(180deg) scale(1.2); }}
         100% {{ transform: rotate(360deg) scale(1); }}
     }}
+    
+    /* Text Effects */
+    .neon-text {{
+        font-family: 'Orbitron', sans-serif;
+        font-size: 4rem;
+        background: linear-gradient(45deg, #8a2be2, #00f3ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 50px rgba(138,43,226,0.5);
+        animation: neural-pulse 2s infinite;
+    }}
+    
+    @keyframes neural-pulse {{
+        0% {{ transform: scale(1); }}
+        50% {{ transform: scale(1.05); }}
+        100% {{ transform: scale(1); }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# Add background layer
+# Add interactive particle background
 st.components.v1.html("""
     <div class="particle-layer"></div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '-1';
+        document.body.appendChild(canvas);
+        
+        let particles = [];
+        const particleCount = 200;
+        
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = math.random() * canvas.width;
+                this.y = math.random() * canvas.height;
+                this.vx = (math.random() - 0.5) * 0.5;
+                this.vy = (math.random() - 0.5) * 0.5;
+                this.radius = math.random() * 2;
+                this.color = `hsl(${math.random() * 360}, 100%, 50%)`;
+                this.alpha = math.random() * 0.5;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                
+                this.alpha = 0.3 + math.sin(Date.now() * 0.001 + this.x) * 0.2;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.alpha;
+                ctx.fill();
+            }
+        }
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = Array.from({length: particleCount}, () => new Particle());
+        }
+        
+        function animate() {
+            ctx.fillStyle = 'rgba(0,1,25,0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+                
+                particles.forEach(p2 => {
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 150) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = p.color;
+                        ctx.globalAlpha = 0.3 - (distance / 150);
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    });
+    </script>
 """)
 
 # --------------------------
@@ -216,21 +255,12 @@ st.components.v1.html("""
 @st.cache_resource
 def load_cognitive_engine():
     model = SentenceTransformer('all-MiniLM-L6-v2')
-    suggestion_base = [
-        "Neural cryptography breakthroughs", 
-        "Quantum teleportation protocols",
-        "Dark matter harvesting", 
-        "Neuro-synthetic interfaces",
-        "Exoplanet terraforming", 
-        "AI consciousness mapping"
-    ]
-    suggestion_embeddings = model.encode(suggestion_base)
-    return model, suggestion_base, suggestion_embeddings
+    return model
 
-model, suggestions, suggestion_embeddings = load_cognitive_engine()
+model = load_cognitive_engine()
 
 # --------------------------
-# OPTIMIZED QUANTUM FUNCTIONS
+# QUANTUM FUNCTIONS
 # --------------------------
 async def hyper_search(query):
     loop = asyncio.get_event_loop()
@@ -241,16 +271,10 @@ async def hyper_search(query):
                     executor, 
                     lambda: list(ddgs.text(query, max_results=5))
                 )
-                return results[:9]
+                return results[:20]
     except Exception as e:
         st.error(f"QUANTUM INTERFERENCE: {str(e)}")
         return []
-
-@st.cache_data(ttl=300, show_spinner=False)
-def neural_suggest(query):
-    query_embed = model.encode([query])
-    sim_scores = cosine_similarity(query_embed, suggestion_embeddings)[0]
-    return [suggestions[i] for i in np.argsort(sim_scores)[-3:][::-1]]
 
 # --------------------------
 # INTERFACE RENDERING
@@ -258,55 +282,18 @@ def neural_suggest(query):
 def main():
     st.markdown("""
         <div style="text-align: center; margin: 5rem 0;">
-            <h1 style="
-                font-family: 'Orbitron', sans-serif;
-                font-size: 4rem;
-                background: linear-gradient(45deg, #8a2be2, #00f3ff);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                text-shadow: 0 0 50px rgba(138,43,226,0.5);
-                animation: neural-pulse 2s infinite;
-                margin-bottom: 2rem;
-            ">
+            <h1 class="neon-text">
                 NEXUS COGNITION ENGINE
             </h1>
-            <div style="
-                border-bottom: 2px solid #8a2be2;
-                width: 50%;
-                margin: 0 auto;
-                box-shadow: 0 0 30px rgba(138,43,226,0.3);
-            "></div>
+            <div style="border-bottom: 2px solid #8a2be2; width: 50%; margin: 0 auto;"></div>
         </div>
     """, unsafe_allow_html=True)
 
-    query = st.text_input(" ", placeholder="ENTER QUANTUM QUERY VECTOR...", 
-                         key="search", label_visibility="collapsed").strip()
+    query = st.text_input(" ", placeholder="ENTER QUANTUM QUERY VECTOR...", key="search", label_visibility="collapsed").strip()
 
     if query:
-        with st.container():
-            suggestions = neural_suggest(query)
-            if suggestions:
-                st.markdown("#### ACTIVE NEURAL PATTERNS")
-                cols = st.columns(3)
-                for i, sug in enumerate(suggestions):
-                    with cols[i % 3]:
-                        st.markdown(f"""
-                            <div class="neon-suggestion" 
-                                onclick="this.style.transform='scale(0.95)'; 
-                                setTimeout(() => {{ document.querySelector('input').value = '{sug}'; }}, 200)">
-                                <span style="color: var(--hologram-blue);">◈</span>
-                                <span style="color: white; margin-left: 10px;">{sug}</span>
-                            </div>
-                        """, unsafe_allow_html=True)
-
-        with st.spinner(""):
-            st.markdown("""
-                <div class="hologram-loader"></div>
-                <div style="text-align: center; color: var(--neon-purple); 
-                        margin: 1rem 0; font-size: 1.2em; animation: neural-pulse 2s infinite;">
-                    DECRYPTING QUANTUM DATASTREAMS...
-                </div>
-            """, unsafe_allow_html=True)
+        with st.spinner("Decrypting Quantum Datastructures..."):
+            st.markdown("""<div class="hologram-loader"></div>""", unsafe_allow_html=True)
             
             results = asyncio.run(hyper_search(query))
             
@@ -315,27 +302,15 @@ def main():
                 for result in results:
                     st.markdown(f"""
                         <div class="quantum-card">
-                            <div style="border-left: 3px solid var(--cyber-pink); 
-                                    padding-left: 1rem; margin-bottom: 1.5rem;">
-                                <h3 style="color: var(--matrix-green); margin: 0;
-                                        text-shadow: 0 0 15px rgba(0,255,157,0.3);">
-                                    {result['title']}
-                                </h3>
+                            <div style="border-left: 3px solid var(--cyber-pink); padding-left: 1rem;">
+                                <h3 style="color: var(--matrix-green);">{result['title']}</h3>
                             </div>
-                            <p style="color: rgba(255,255,255,0.9); 
-                                    line-height: 1.6; position: relative;">
-                                <span style="color: var(--hologram-blue);">⫸⫸</span>
-                                {result['body']}
-                            </p>
+                            <p style="color: rgba(255,255,255,0.9);">{result['body']}</p>
                         </div>
                     """, unsafe_allow_html=True)
             else:
                 st.markdown("""
-                    <div style="text-align: center; padding: 2rem; 
-                            border: 2px solid var(--neon-purple);
-                            color: var(--cyber-pink);
-                            margin-top: 2rem;
-                            animation: neural-pulse 1.5s infinite;">
+                    <div style="text-align: center; padding: 2rem; color: var(--cyber-pink); border: 2px solid var(--neon-purple); margin-top: 2rem;">
                         ⚠️ QUANTUM FLUX DETECTED - NO STABLE RESULTS FOUND
                     </div>
                 """, unsafe_allow_html=True)
