@@ -207,9 +207,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-            opacity: 0;
-        }
-    }
-    </style>
-""", unsafe_allow_html=True)
