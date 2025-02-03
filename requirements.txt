@@ -1,11 +1,6 @@
 streamlit>=1.22.0
-sentence-transformers>=2.2.2
-numpy>=1.24.3
-scikit-learn>=1.2.2
-duckduckgo-search>=3.9.5
-aiohttp>=3.8.4
-torch>=2.0.1
-textblob
-speechrecognition
-matplotlib
-scipy
+sentence-transformers
+duckduckgo-search
+scikit-learn
+numpy
+regex
