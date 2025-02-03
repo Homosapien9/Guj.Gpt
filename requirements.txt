@@ -5,3 +5,7 @@ scikit-learn>=1.2.2
 duckduckgo-search>=3.9.5
 aiohttp>=3.8.4
 torch>=2.0.1
+textblob
+speechrecognition
+matplotlib
+scipy
