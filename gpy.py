@@ -55,20 +55,112 @@ st.markdown(f"""
         justify-content: center;
         align-items: center;
         backdrop-filter: blur(10px);
-        animation: fade-out 1s ease 3s forwards;
+        animation: slideIn 1s cubic-bezier(0.4, 0, 0.2, 1), 
+                   slideOut 1s cubic-bezier(0.4, 0, 0.2, 1) 3s forwards;
+        transform-origin: top center;
+    }}
+    
+    @keyframes slideIn {{
+        0% {{ transform: translateY(-100vh) scaleY(0); opacity: 0; }}
+        100% {{ transform: translateY(0) scaleY(1); opacity: 1; }}
+    }}
+    
+    @keyframes slideOut {{
+        0% {{ transform: translateY(0) scaleY(1); opacity: 1; }}
+        100% {{ transform: translateY(100vh) scaleY(0); opacity: 0; }}
     }}
     
     .welcome-content {{
-        background: linear-gradient(145deg, #1a0033, #0a0a1a);
-        padding: 3rem;
+        position: relative;
+        padding: 4rem;
         border-radius: 20px;
-        border: 2px solid var(--neon-purple);
         text-align: center;
-        box-shadow: 0 0 50px rgba(138,43,226,0.5);
+        overflow: hidden;
+        perspective: 1000px;
     }}
     
-    /* Matrix Rain */
-    .code-matrix {{
+    .holographic-border {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, 
+            rgba(138,43,226,0.2),
+            rgba(75,0,130,0.4),
+            rgba(138,43,226,0.2));
+        animation: hologram 4s linear infinite;
+        z-index: -1;
+    }}
+    
+    @keyframes hologram {{
+        0% {{ opacity: 0.8; transform: rotate(0deg); }}
+        100% {{ opacity: 0.8; transform: rotate(360deg); }}
+    }}
+    
+    .quantum-particles span {{
+        position: absolute;
+        background: var(--neon-purple);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: particle-float 3s infinite;
+    }}
+    
+    @keyframes particle-float {{
+        0%, 100% {{ transform: translateY(0) translateX(0); opacity: 0; }}
+        50% {{ transform: translateY(-100px) translateX(50px); opacity: 1; }}
+    }}
+    
+    /* Enhanced Title Animation */
+    .welcome-title {{
+        animation: title-glow 2s ease-in-out infinite alternate,
+                   title-float 3s ease-in-out infinite;
+    }}
+    
+    @keyframes title-glow {{
+        0% {{ text-shadow: 0 0 10px var(--neon-purple); }}
+        100% {{ text-shadow: 0 0 30px var(--neon-purple); }}
+    }}
+    
+    @keyframes title-float {{
+        0%, 100% {{ transform: translateY(0); }}
+        50% {{ transform: translateY(-10px); }}
+    }}
+    
+    /* Enhanced Enter Button */
+    .enter-button {{
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-style: preserve-3d;
+    }}
+    
+    .enter-button:hover {{
+        transform: scale(1.1) rotateX(15deg) rotateY(15deg);
+        box-shadow: 0 0 40px rgba(138,43,226,0.5);
+    }}
+    
+    .enter-button::before {{
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, 
+            transparent 25%,
+            rgba(138,43,226,0.2) 50%,
+            transparent 75%);
+        animation: button-scan 3s linear infinite;
+    }}
+    
+    @keyframes button-scan {{
+        0% {{ transform: translateX(-100%) rotate(45deg); }}
+        100% {{ transform: translateX(100%) rotate(45deg); }}
+    }}
+    
+    /* Matrix Rain Effect */
+    .matrix-rain {{
         position: fixed;
         top: 0;
         left: 0;
@@ -76,7 +168,7 @@ st.markdown(f"""
         height: 100vh;
         pointer-events: none;
         z-index: -1;
-        opacity: 0.3;
+        opacity: 0.5;
     }}
     
     .matrix-line {{
@@ -102,6 +194,12 @@ st.markdown(f"""
         margin: 2rem 0;
         border-radius: 20px;
         backdrop-filter: blur(10px);
+        animation: fadeIn 1s ease;
+    }}
+    
+    @keyframes fadeIn {{
+        0% {{ opacity: 0; transform: translateY(20px); }}
+        100% {{ opacity: 1; transform: translateY(0); }}
     }}
     
     .neural-link {{
@@ -121,22 +219,9 @@ st.markdown(f"""
         transform: translateX(10px);
     }}
     
-    /* Enter Button */
-    .enter-button {{
-        background: var(--neon-purple);
-        border: none;
-        padding: 1rem 2rem;
-        border-radius: 50px;
-        cursor: pointer;
-        font-family: 'Syne Mono';
-        color: white;
-        animation: neon-pulse 2s infinite;
-    }}
-    
-    @keyframes neon-pulse {{
-        0% {{ box-shadow: 0 0 5px var(--neon-purple); }}
-        50% {{ box-shadow: 0 0 20px var(--neon-purple); }}
-        100% {{ box-shadow: 0 0 5px var(--neon-purple); }}
+    @keyframes link-glow {{
+        0% {{ box-shadow: 0 0 5px rgba(138,43,226,0.3); }}
+        100% {{ box-shadow: 0 0 20px rgba(138,43,226,0.5); }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -148,24 +233,35 @@ if 'first_visit' not in st.session_state:
     st.session_state.first_visit = True
 
 if st.session_state.first_visit:
-    st.markdown("""
+    particles = "".join(
+        f'<span style="width: {random.randint(2,6)}px; height: {random.randint(2,6)}px; '
+        f'top: {random.randint(10,90)}%; left: {random.randint(10,90)}%; '
+        f'animation-delay: {random.random()*2}s;"></span>'
+        for _ in range(30)
+    )
+    
+    st.markdown(f"""
     <div class="welcome-overlay">
         <div class="welcome-content">
-            <h1 class="welcome-title" style="font-family: 'Orbitron'; font-size: 4rem; color: var(--neon-purple);">
-                WELCOME TO QUANTUMQUEST
+            <div class="holographic-border"></div>
+            <div class="quantum-particles">{particles}</div>
+            <h1 class="welcome-title" style="font-family: 'Orbitron'; font-size: 4rem; color: var(--neon-purple); margin: 2rem;">
+                QUANTUMQUEST INITIALIZED
             </h1>
-            <p style="font-family: 'Syne Mono'; color: var(--neon-purple);">
-                Initializing quantum cognition matrix...
+            <p style="font-family: 'Syne Mono'; color: var(--neon-purple); margin: 1.5rem;">
+                █▓▒░ HYPERSPACE MATRIX ONLINE ░▒▓█
             </p>
-            <button class="enter-button" onclick="window.parent.document.querySelector('.stApp').dispatchEvent(new CustomEvent('CLOSE_WELCOME'))">
-                ENTER THE QUANTUM REALM
+            <button class="enter-button" onclick="window.parent.document.querySelector('.stApp').dispatchEvent(new CustomEvent('CLOSE_WELCOME'))"
+                style="background: transparent; border: 2px solid var(--neon-purple); padding: 1rem 3rem; border-radius: 8px;
+                font-family: 'Syne Mono'; color: white; font-size: 1.2rem; position: relative;">
+                ENTER QUANTUM FIELD
             </button>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     # Handle the close event
-    html("""
+    st.components.v1.html("""
     <script>
     document.querySelector('.stApp').addEventListener('CLOSE_WELCOME', function() {
         window.parent.document.querySelector('[class^="welcome-overlay"]').style.display = 'none';
@@ -231,7 +327,7 @@ def main():
     """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div class="code-matrix" id="codeMatrix"></div>
+    <div class="matrix-rain" id="codeMatrix"></div>
     <script>
     function createMatrix() {
         const container = document.getElementById('codeMatrix');
@@ -240,10 +336,10 @@ def main():
         for(let i = 0; i < 150; i++) {  // Increased matrix rain density
             const line = document.createElement('div');
             line.className = 'matrix-line';
-            line.style.left = math.random() * 100 + 'vw';
-            line.style.animationDuration = math.random() * 5 + 5 + 's';
+            line.style.left = Math.random() * 100 + 'vw';
+            line.style.animationDuration = Math.random() * 5 + 5 + 's';
             line.textContent = Array(100).fill().map(() => 
-                characters[math.floor(math.random() * characters.length)]
+                characters[Math.floor(Math.random() * characters.length)]
             ).join(' ');
             container.appendChild(line);
         }
@@ -282,7 +378,5 @@ def main():
             """
             st.markdown(response_html, unsafe_allow_html=True)
 
-if __name__ == "__main__":
-    main()
 if __name__ == "__main__":
     main()
