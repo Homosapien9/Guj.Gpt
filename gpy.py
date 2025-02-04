@@ -55,28 +55,34 @@ st.markdown(f"""
         justify-content: center;
         align-items: center;
         backdrop-filter: blur(10px);
-        animation: slideIn 1s cubic-bezier(0.4, 0, 0.2, 1), 
-                   slideOut 1s cubic-bezier(0.4, 0, 0.2, 1) 3s forwards;
-        transform-origin: top center;
+        animation: 
+            quantumEntrance 1.5s cubic-bezier(0.4, 0, 0.2, 1),
+            quantumExit 1s cubic-bezier(0.4, 0, 0.2, 1) 3s forwards;
     }}
     
-    @keyframes slideIn {{
-        0% {{ transform: translateY(-100vh) scaleY(0); opacity: 0; }}
-        100% {{ transform: translateY(0) scaleY(1); opacity: 1; }}
+    @keyframes quantumEntrance {{
+        0% {{ 
+            transform: scale(0) rotate(360deg);
+            opacity: 0;
+        }}
+        80% {{
+            transform: scale(1.1) rotate(-10deg);
+            opacity: 1;
+        }}
+        100% {{
+            transform: scale(1) rotate(0deg);
+        }}
     }}
     
-    @keyframes slideOut {{
-        0% {{ transform: translateY(0) scaleY(1); opacity: 1; }}
-        100% {{ transform: translateY(100vh) scaleY(0); opacity: 0; }}
-    }}
-    
-    .welcome-content {{
-        position: relative;
-        padding: 4rem;
-        border-radius: 20px;
-        text-align: center;
-        overflow: hidden;
-        perspective: 1000px;
+    @keyframes quantumExit {{
+        0% {{ 
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }}
+        100% {{ 
+            transform: translateY(100vh) scale(0.2);
+            opacity: 0;
+        }}
     }}
     
     .holographic-border {{
@@ -85,10 +91,11 @@ st.markdown(f"""
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(45deg, 
-            rgba(138,43,226,0.2),
-            rgba(75,0,130,0.4),
-            rgba(138,43,226,0.2));
+        background: 
+            linear-gradient(45deg, 
+                rgba(138,43,226,0.2),
+                rgba(75,0,130,0.4),
+                rgba(138,43,226,0.2));
         animation: hologram 4s linear infinite;
         z-index: -1;
     }}
@@ -103,18 +110,25 @@ st.markdown(f"""
         background: var(--neon-purple);
         border-radius: 50%;
         pointer-events: none;
-        animation: particle-float 3s infinite;
+        animation: 
+            particle-float 3s infinite,
+            particle-pulse 1.5s infinite;
     }}
     
     @keyframes particle-float {{
-        0%, 100% {{ transform: translateY(0) translateX(0); opacity: 0; }}
-        50% {{ transform: translateY(-100px) translateX(50px); opacity: 1; }}
+        0%, 100% {{ transform: translateY(0) translateX(0); }}
+        50% {{ transform: translateY(-100px) translateX(50px); }}
     }}
     
-    /* Enhanced Title Animation */
+    @keyframes particle-pulse {{
+        0%, 100% {{ opacity: 0.3; }}
+        50% {{ opacity: 1; }}
+    }}
+    
     .welcome-title {{
-        animation: title-glow 2s ease-in-out infinite alternate,
-                   title-float 3s ease-in-out infinite;
+        animation: 
+            title-glow 2s ease-in-out infinite alternate,
+            title-float 3s ease-in-out infinite;
     }}
     
     @keyframes title-glow {{
@@ -127,39 +141,7 @@ st.markdown(f"""
         50% {{ transform: translateY(-10px); }}
     }}
     
-    /* Enhanced Enter Button */
-    .enter-button {{
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        transform-style: preserve-3d;
-    }}
-    
-    .enter-button:hover {{
-        transform: scale(1.1) rotateX(15deg) rotateY(15deg);
-        box-shadow: 0 0 40px rgba(138,43,226,0.5);
-    }}
-    
-    .enter-button::before {{
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(45deg, 
-            transparent 25%,
-            rgba(138,43,226,0.2) 50%,
-            transparent 75%);
-        animation: button-scan 3s linear infinite;
-    }}
-    
-    @keyframes button-scan {{
-        0% {{ transform: translateX(-100%) rotate(45deg); }}
-        100% {{ transform: translateX(100%) rotate(45deg); }}
-    }}
-    
-    /* Matrix Rain Effect */
+    /* Enhanced Matrix Rain */
     .matrix-rain {{
         position: fixed;
         top: 0;
@@ -168,7 +150,7 @@ st.markdown(f"""
         height: 100vh;
         pointer-events: none;
         z-index: -1;
-        opacity: 0.5;
+        opacity: 0.3;
     }}
     
     .matrix-line {{
@@ -186,42 +168,32 @@ st.markdown(f"""
         100% {{ transform: translateY(100vh); opacity: 0; }}
     }}
     
-    /* Quantum Response */
-    .quantum-response {{
-        border: 1px solid rgba(138,43,226,0.3);
-        background: linear-gradient(145deg, rgba(26,0,51,0.4), rgba(10,10,26,0.6));
-        padding: 2rem;
-        margin: 2rem 0;
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-        animation: fadeIn 1s ease;
+    /* Quantum Input Field */
+    .stTextInput input {{
+        background: rgba(138,43,226,0.1) !important;
+        border: 1px solid var(--neon-purple) !important;
+        color: white !important;
+        animation: input-glow 2s infinite alternate;
     }}
     
-    @keyframes fadeIn {{
-        0% {{ opacity: 0; transform: translateY(20px); }}
-        100% {{ opacity: 1; transform: translateY(0); }}
-    }}
-    
-    .neural-link {{
-        display: block;
-        padding: 1rem;
-        margin: 1rem 0;
-        background: rgba(138,43,226,0.1);
-        border-radius: 15px;
-        border: 1px solid rgba(138,43,226,0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
-        animation: link-glow 3s infinite alternate;
-    }}
-    
-    .neural-link:hover {{
-        background: rgba(138,43,226,0.2);
-        transform: translateX(10px);
-    }}
-    
-    @keyframes link-glow {{
+    @keyframes input-glow {{
         0% {{ box-shadow: 0 0 5px rgba(138,43,226,0.3); }}
         100% {{ box-shadow: 0 0 20px rgba(138,43,226,0.5); }}
+    }}
+    
+    /* Signature Animation */
+    .signature {{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        font-family: 'Syne Mono';
+        color: rgba(138,43,226,0.8);
+        animation: signature-float 4s ease-in-out infinite;
+    }}
+    
+    @keyframes signature-float {{
+        0%, 100% {{ transform: translateY(0); }}
+        50% {{ transform: translateY(-10px); }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -237,7 +209,7 @@ if st.session_state.first_visit:
         f'<span style="width: {random.randint(2,6)}px; height: {random.randint(2,6)}px; '
         f'top: {random.randint(10,90)}%; left: {random.randint(10,90)}%; '
         f'animation-delay: {random.random()*2}s;"></span>'
-        for _ in range(30)
+        for _ in range(50)
     )
     
     st.markdown(f"""
@@ -246,26 +218,22 @@ if st.session_state.first_visit:
             <div class="holographic-border"></div>
             <div class="quantum-particles">{particles}</div>
             <h1 class="welcome-title" style="font-family: 'Orbitron'; font-size: 4rem; color: var(--neon-purple); margin: 2rem;">
-                QUANTUMQUEST INITIALIZED
+                QUANTUMQUEST ONLINE
             </h1>
             <p style="font-family: 'Syne Mono'; color: var(--neon-purple); margin: 1.5rem;">
-                █▓▒░ HYPERSPACE MATRIX ONLINE ░▒▓█
+                █▓▒░ COGNITIVE MATRIX ACTIVATED ░▒▓█
             </p>
-            <button class="enter-button" onclick="window.parent.document.querySelector('.stApp').dispatchEvent(new CustomEvent('CLOSE_WELCOME'))"
-                style="background: transparent; border: 2px solid var(--neon-purple); padding: 1rem 3rem; border-radius: 8px;
-                font-family: 'Syne Mono'; color: white; font-size: 1.2rem; position: relative;">
-                ENTER QUANTUM FIELD
-            </button>
         </div>
     </div>
+    <div class="signature">🌀 forged in the quantum realm by u/homosapien9</div>
     """, unsafe_allow_html=True)
     
-    # Handle the close event
+    # Auto-close after animation
     st.components.v1.html("""
     <script>
-    document.querySelector('.stApp').addEventListener('CLOSE_WELCOME', function() {
-        window.parent.document.querySelector('[class^="welcome-overlay"]').style.display = 'none';
-    });
+    setTimeout(function() {
+        window.parent.document.querySelector('.welcome-overlay').style.display = 'none';
+    }, 4000);
     </script>
     """)
     st.session_state.first_visit = False
@@ -310,11 +278,9 @@ class QuantumCore:
         }
     
     def _format_response(self, text):
-        # Improve text formatting
         text = re.sub(r'(?<=[a-z])\.(?=\s[A-Z])', '.\n\n', text) 
         text = re.sub(r'(\d+)\.\s', r'\1. ', text) 
-        text = re.sub(r'\s+', ' ', text)  
-        return text
+        return re.sub(r'\s+', ' ', text).strip()
 
 # --------------------------
 # MAIN INTERFACE
@@ -322,7 +288,10 @@ class QuantumCore:
 def main():
     st.markdown("""
         <div style="text-align: center; margin: 3rem 0;">
-            <h1 class="main-title">QuantumQuest</h1>
+            <h1 style="font-family: 'Orbitron'; color: var(--neon-purple); 
+                animation: title-glow 2s infinite alternate;">
+                QuantumQuest
+            </h1>
         </div>
     """, unsafe_allow_html=True)
 
@@ -331,15 +300,16 @@ def main():
     <script>
     function createMatrix() {
         const container = document.getElementById('codeMatrix');
-        const characters = '01';
+        const characters = '01█▓▒░◇◆♤♧☢⚛';
         
-        for(let i = 0; i < 150; i++) {  // Increased matrix rain density
+        for(let i = 0; i < 200; i++) {
             const line = document.createElement('div');
             line.className = 'matrix-line';
-            line.style.left = Math.random() * 100 + 'vw';
-            line.style.animationDuration = Math.random() * 5 + 5 + 's';
+            line.style.left = math.random() * 100 + 'vw';
+            line.style.animationDuration = math.random() * 3 + 5 + 's';
+            line.style.color = `hsl(${math.random()*360}deg, 70%, 60%)`;
             line.textContent = Array(100).fill().map(() => 
-                characters[Math.floor(Math.random() * characters.length)]
+                characters[math.floor(math.random() * characters.length)]
             ).join(' ');
             container.appendChild(line);
         }
@@ -351,7 +321,7 @@ def main():
     if 'core' not in st.session_state:
         st.session_state.core = QuantumCore()
     
-    query = st.text_input(" ", placeholder="🌠 ENTER QUANTUM QUERY ...", 
+    query = st.text_input(" ", placeholder="🌌 ENTER QUANTUM QUERY ...", 
                         key="search", label_visibility="collapsed").strip()
     
     if query:
@@ -360,16 +330,25 @@ def main():
             response = st.session_state.core.generate_response(query, results)
 
             response_html = f"""
-            <div class="quantum-response">
-                <div class="response-content">
+            <div style="border: 1px solid rgba(138,43,226,0.3);
+                background: linear-gradient(145deg, rgba(26,0,51,0.4), rgba(10,10,26,0.6));
+                padding: 2rem;
+                margin: 2rem 0;
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+                animation: fadeIn 1s ease;">
+                <div style="animation: pulsate 2s infinite alternate;">
                     {response['content']}
                 </div>
                 <div style="margin-top: 2rem;">
                     <h3 style="color: var(--neon-purple); border-bottom: 1px solid rgba(138,43,226,0.3);">
-                        Quantum Sources (Click to Warp)
+                        Quantum Sources
                     </h3>
                     {"".join(
-                        f'<a href="{result["href"]}" target="_blank" class="neural-link">'
+                        f'<a href="{result["href"]}" target="_blank" style="display: block; padding: 1rem; margin: 1rem 0;
+                            background: rgba(138,43,226,0.1); border-radius: 15px; border: 1px solid rgba(138,43,226,0.3);
+                            transition: all 0.3s ease; color: white; text-decoration: none;
+                            animation: link-glow 3s infinite alternate;">'
                         f'<span style="color: var(--neon-purple);">⇲</span> {result["title"]}</a>'
                         for result in response['sources']
                     )}
