@@ -330,32 +330,32 @@ def main():
             response = st.session_state.core.generate_response(query, results)
 
             response_html = f"""
-            <div style="border: 1px solid rgba(138,43,226,0.3);
-                background: linear-gradient(145deg, rgba(26,0,51,0.4), rgba(10,10,26,0.6));
-                padding: 2rem;
-                margin: 2rem 0;
-                border-radius: 20px;
-                backdrop-filter: blur(10px);
-                animation: fadeIn 1s ease;">
-                <div style="animation: pulsate 2s infinite alternate;">
-                    {response['content']}
-                </div>
-                <div style="margin-top: 2rem;">
-                    <h3 style="color: var(--neon-purple); border-bottom: 1px solid rgba(138,43,226,0.3);">
-                        Quantum Sources
-                    </h3>
-                    {"".join(
-                        f"<a href="{result["href"]}" target="_blank" style="display: block; padding: 1rem; margin: 1rem 0;
-                            background: rgba(138,43,226,0.1); border-radius: 15px; border: 1px solid rgba(138,43,226,0.3);
-                            transition: all 0.3s ease; color: white; text-decoration: none;
-                            animation: link-glow 3s infinite alternate;">'
-                        f'<span style="color: var(--neon-purple);">⇲</span> {result["title"]}</a>'
-                        for result in response['sources']
-                    )}
-                </div>
-            </div>
-            """
-            st.markdown(response_html, unsafe_allow_html=True)
+<div style="border: 1px solid rgba(138,43,226,0.3);
+    background: linear-gradient(145deg, rgba(26,0,51,0.4), rgba(10,10,26,0.6));
+    padding: 2rem;
+    margin: 2rem 0;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    animation: fadeIn 1s ease;">
+    <div style="animation: pulsate 2s infinite alternate;">
+        {response['content']}
+    </div>
+    <div style="margin-top: 2rem;">
+        <h3 style="color: var(--neon-purple); border-bottom: 1px solid rgba(138,43,226,0.3);">
+            Quantum Sources
+        </h3>
+        {"".join(
+            f'<a href="{result["href"]}" target="_blank" style="display: block; padding: 1rem; margin: 1rem 0;
+            background: rgba(138,43,226,0.1); border-radius: 15px; border: 1px solid rgba(138,43,226,0.3);
+            transition: all 0.3s ease; color: white; text-decoration: none;
+            animation: link-glow 3s infinite alternate;">'
+            f'<span style="color: var(--neon-purple);">⇲</span> {result["title"]}</a>'
+            for result in response['sources'])}
+    </div>
+</div>
+"""
+
+st.markdown(response_html, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
