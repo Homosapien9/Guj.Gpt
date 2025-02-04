@@ -13,7 +13,7 @@ import random
 # QUANTUM CORE INIT
 # --------------------------
 st.set_page_config(
-    page_title="IRA AI",
+    page_title="QUERY AI",
     page_icon="🌌",
     layout="wide",
     initial_sidebar_state="collapsed",
