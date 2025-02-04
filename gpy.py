@@ -7,6 +7,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from streamlit.components.v1 import html
 import re
+import random
 
 # --------------------------
 # QUANTUM CORE INIT
@@ -27,9 +28,9 @@ st.markdown(f"""
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Syne+Mono&family=Major+Mono+Display&display=swap');
     
     :root {{
-        --neon-red: #ff0044;
-        --hologram-pink: #ff00ff;
-        --quantum-gradient: radial-gradient(circle at 50% 50%, #180028, #000000);
+        --neon-purple: #8A2BE2;
+        --matrix-green: #00ff00;
+        --quantum-gradient: linear-gradient(135deg, #0a0a1a 0%, #1a0033 100%);
         --glow-intensity: 1;
     }}
     
@@ -42,114 +43,44 @@ st.markdown(f"""
         padding: 0;
     }}
     
-    /* Quantum Entanglement Effect */
-    @keyframes quantum-entanglement {{
-        0% {{ transform: translate(0,0) scale(1); opacity: 1; }}
-        50% {{ transform: translate(100px,50px) scale(1.5); opacity: 0.3; }}
-        100% {{ transform: translate(0,0) scale(1); opacity: 1; }}
-    }}
-    
-    /* Holographic Grid System */
-    .holo-grid {{
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background-image: 
-            linear-gradient(rgba(255,0,255,0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,0,255,0.05) 1px, transparent 1px);
-        background-size: 100px 100px;
-        animation: grid-flow 40s linear infinite;
-        z-index: -1;
-    }}
-    
-    @keyframes grid-flow {{
-        0% {{ transform: translate(0,0); }}
-        100% {{ transform: translate(100px,100px); }}
-    }}
-    
-    /* Particle Nebula */
-    .quantum-nebula {{
+    /* Welcome Panel */
+    .welcome-overlay {{
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        pointer-events: none;
-        z-index: -1;
-    }}
-    
-    .nebula-particle {{
-        position: absolute;
-        width: 2px;
-        height: 2px;
-        background: var(--hologram-pink);
-        border-radius: 50%;
-        animation: particle-dance 15s infinite linear;
-    }}
-    
-    @keyframes particle-dance {{
-        0% {{ transform: translate(0,0) scale(1); opacity: 0.8; }}
-        50% {{ transform: translate(100vw,50vh) scale(2); opacity: 0.2; }}
-        100% {{ transform: translate(0,0) scale(1); opacity: 0.8; }}
-    }}
-    
-    /* Enhanced Response Display */
-    .quantum-response {{
-        position: relative;
-        padding: 2rem;
-        margin: 2rem 0;
-        background: linear-gradient(145deg, rgba(18,0,31,0.4), rgba(10,10,18,0.6));
-        backdrop-filter: blur(15px);
-        border-radius: 20px;
-        border: 1px solid rgba(255,0,68,0.3);
-        animation: quantum-appear 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    }}
-    
-    .response-content {{
-        font-size: 1.1rem;
-        line-height: 1.8;
-        text-shadow: 0 0 10px rgba(255,0,68,0.3);
-    }}
-    
-    /* Clickable Neural Links */
-    .neural-link {{
-        display: block;
-        padding: 1rem;
-        margin: 1rem 0;
-        background: rgba(255,0,68,0.1);
-        border-radius: 15px;
-        border: 1px solid rgba(255,0,68,0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
-        animation: link-glow 3s infinite alternate;
-    }}
-    
-    .neural-link:hover {{
-        background: rgba(255,0,255,0.2);
-        transform: translateX(10px);
-    }}
-    
-    @keyframes link-glow {{
-        0% {{ box-shadow: 0 0 10px rgba(255,0,68,0.1); }}
-        100% {{ box-shadow: 0 0 30px rgba(255,0,255,0.2); }}
-    }}
-    
-    /* Quantum Input Field */
-    .stTextInput>div>div>input {{
-        background: rgba(0,0,0,0.3) !important;
-        border: none !important;
-        border-radius: 50px !important;
-        padding: 1.5rem 2rem !important;
-        font-size: 1.2rem !important;
-        color: var(--neon-red) !important;
-        box-shadow: 0 0 50px rgba(255,0,68,0.3) !important;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         backdrop-filter: blur(10px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }}
     
-    /* Floating Code Matrix */
+    .welcome-content {{
+        background: linear-gradient(145deg, #1a0033, #0a0a1a);
+        padding: 3rem;
+        border-radius: 20px;
+        border: 2px solid var(--neon-purple);
+        text-align: center;
+        box-shadow: 0 0 50px rgba(138,43,226,0.5);
+    }}
+    
+    /* Static Title */
+    .main-title {{
+        font-family: 'Orbitron', sans-serif;
+        font-size: 4rem !important;
+        background: linear-gradient(45deg, #8A2BE2, #9400D3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(138,43,226,0.7);
+        margin: 2rem 0;
+        position: relative;
+        z-index: 1;
+    }}
+    
+    /* Enhanced Matrix Rain */
     .code-matrix {{
         position: fixed;
         top: 0;
@@ -158,14 +89,16 @@ st.markdown(f"""
         height: 100vh;
         pointer-events: none;
         z-index: -1;
-        opacity: 0.1;
+        opacity: 0.15;
     }}
     
     .matrix-line {{
         position: absolute;
-        color: var(--hologram-pink);
+        color: var(--neon-purple);
         font-family: 'Major Mono Display', monospace;
+        font-size: 1.2rem;
         animation: matrix-fall 20s linear infinite;
+        text-shadow: 0 0 10px rgba(138,43,226,0.5);
     }}
     
     @keyframes matrix-fall {{
@@ -173,17 +106,72 @@ st.markdown(f"""
         2% {{ opacity: 1; }}
         100% {{ transform: translateY(100vh); opacity: 0; }}
     }}
+    
+    /* Quantum Response */
+    .quantum-response {{
+        border: 1px solid rgba(138,43,226,0.3);
+        background: linear-gradient(145deg, rgba(26,0,51,0.4), rgba(10,10,26,0.6));
+        padding: 2rem;
+        margin: 2rem 0;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }}
+    
+    .neural-link {{
+        display: block;
+        padding: 1rem;
+        margin: 1rem 0;
+        background: rgba(138,43,226,0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(138,43,226,0.3);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        animation: link-glow 3s infinite alternate;
+    }}
+    
+    .neural-link:hover {{
+        background: rgba(138,43,226,0.2);
+        transform: translateX(10px);
+    }}
     </style>
 """, unsafe_allow_html=True)
 
 # --------------------------
-# HOLOGRAPHIC BACKGROUND
+# WELCOME PANEL
 # --------------------------
-st.markdown("""
-    <div class="holo-grid"></div>
-    <div class="quantum-nebula" id="quantumNebula"></div>
-    <div class="code-matrix" id="codeMatrix"></div>
-""", unsafe_allow_html=True)
+if 'first_visit' not in st.session_state:
+    st.session_state.first_visit = True
+
+if st.session_state.first_visit:
+    st.markdown("""
+    <div class="welcome-overlay">
+        <div class="welcome-content">
+            <h2 style="color: var(--neon-purple); font-family: 'Orbitron';">WELCOME TO IRA AI</h2>
+            <p>Initializing quantum cognition matrix...</p>
+            <button onclick="window.parent.document.querySelector('.stApp').dispatchEvent(new CustomEvent('CLOSE_WELCOME'))" 
+                    style="margin-top: 2rem;
+                           background: var(--neon-purple);
+                           border: none;
+                           padding: 1rem 2rem;
+                           border-radius: 50px;
+                           cursor: pointer;
+                           font-family: 'Syne Mono';
+                           color: white;">
+                ENTER THE MATRIX
+            </button>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Handle the close event
+    html("""
+    <script>
+    document.querySelector('.stApp').addEventListener('CLOSE_WELCOME', function() {
+        window.parent.document.querySelector('[class^="welcome-overlay"]').style.display = 'none';
+    });
+    </script>
+    """)
+    st.session_state.first_visit = False
 
 # --------------------------
 # QUANTUM MODULES
@@ -202,19 +190,21 @@ class QuantumCore:
             with DDGS() as ddgs:
                 return await asyncio.get_event_loop().run_in_executor(
                     ThreadPoolExecutor(), 
-                    lambda: list(ddgs.text(query, max_results=7))
+                    lambda: list(ddgs.text(query, max_results=10))  # Fetch more results
                 )
         except Exception as e:
             st.error(f"Quantum flux detected: {str(e)}")
             return []
     
     def generate_response(self, query, results):
+        # Shuffle results for dynamic responses on refresh
+        random.shuffle(results)
         documents = [result['body'] for result in results]
         query_embedding = self.model.encode(query)
         doc_embeddings = self.model.encode(documents)
         
         similarities = cosine_similarity([query_embedding], doc_embeddings)[0]
-        top_indices = np.argsort(similarities)[-3:][::-1]
+        top_indices = np.argsort(similarities)[-5:][::-1]  # Top 5 results
         compiled = self._format_response(" ".join([documents[i] for i in top_indices]))
         
         return {
@@ -227,6 +217,7 @@ class QuantumCore:
         # Improve text formatting
         text = re.sub(r'(?<=[a-z])\.(?=\s[A-Z])', '.\n\n', text)  # Paragraph breaks
         text = re.sub(r'(\d+)\.\s', r'\1. ', text)  # Fix numbered lists
+        text = re.sub(r'\s+', ' ', text)  # Remove extra spaces
         return text
 
 # --------------------------
@@ -235,14 +226,31 @@ class QuantumCore:
 def main():
     st.markdown("""
         <div style="text-align: center; margin: 3rem 0;">
-            <h1 style="font-family: 'Orbitron', sans-serif; font-size: 4rem;
-                    background: linear-gradient(45deg, #ff0044, #ff00ff);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    animation: quantum-entanglement 5s infinite;">
-                IRA AI
-            </h1>
+            <h1 class="main-title">IRA AI</h1>
         </div>
+    """, unsafe_allow_html=True)
+
+    # Enhanced Matrix Rain
+    st.markdown("""
+    <div class="code-matrix" id="codeMatrix"></div>
+    <script>
+    function createMatrix() {
+        const container = document.getElementById('codeMatrix');
+        const characters = '01';
+        
+        for(let i = 0; i < 70; i++) {
+            const line = document.createElement('div');
+            line.className = 'matrix-line';
+            line.style.left = Math.random() * 100 + 'vw';
+            line.style.animationDuration = Math.random() * 10 + 10 + 's';
+            line.textContent = Array(50).fill().map(() => 
+                characters[Math.floor(Math.random() * characters.length)]
+            ).join(' ');
+            container.appendChild(line);
+        }
+    }
+    createMatrix();
+    </script>
     """, unsafe_allow_html=True)
 
     if 'core' not in st.session_state:
@@ -263,47 +271,18 @@ def main():
                     {response['content']}
                 </div>
                 <div style="margin-top: 2rem;">
-                    <h3 style="color: var(--hologram-pink); border-bottom: 1px solid rgba(255,0,68,0.3);">
+                    <h3 style="color: var(--neon-purple); border-bottom: 1px solid rgba(138,43,226,0.3);">
                         Quantum Sources (Click to Warp)
                     </h3>
                     {"".join(
                         f'<a href="{result["href"]}" target="_blank" class="neural-link">'
-                        f'<span style="color: var(--neon-red);">⇲</span> {result["title"]}</a>'
+                        f'<span style="color: var(--neon-purple);">⇲</span> {result["title"]}</a>'
                         for result in response['sources']
                     )}
                 </div>
             </div>
             """
             st.markdown(response_html, unsafe_allow_html=True)
-            
-            # Quantum Effects
-            html(f"""
-            <script>
-            // Create new particles
-            for(let i=0; i<20; i++) {{
-                const particle = document.createElement('div');
-                particle.className = 'nebula-particle';
-                particle.style.left = Math.random()*100 + 'vw';
-                particle.style.top = Math.random()*100 + 'vh';
-                particle.style.animationDuration = Math.random()*10 + 5 + 's';
-                document.getElementById('quantumNebula').appendChild(particle);
-            }}
-            
-            // Add matrix code effect
-            const codeMatrix = document.getElementById('codeMatrix');
-            const characters = '01';
-            for(let i=0; i<50; i++) {{
-                const line = document.createElement('div');
-                line.className = 'matrix-line';
-                line.style.left = Math.random()*100 + 'vw';
-                line.style.animationDelay = Math.random()*5 + 's';
-                line.textContent = Array(30).fill().map(() => 
-                    characters[Math.floor(Math.random()*characters.length)]
-                ).join(' ');
-                codeMatrix.appendChild(line);
-            }}
-            </script>
-            """)
 
 if __name__ == "__main__":
     main()
