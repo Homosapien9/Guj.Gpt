@@ -345,7 +345,7 @@ def main():
                         Quantum Sources
                     </h3>
                     {"".join(
-                        f'<a href="{result["href"]}" target="_blank" style="display: block; padding: 1rem; margin: 1rem 0;
+                        f"<a href="{result["href"]}" target="_blank" style="display: block; padding: 1rem; margin: 1rem 0;
                             background: rgba(138,43,226,0.1); border-radius: 15px; border: 1px solid rgba(138,43,226,0.3);
                             transition: all 0.3s ease; color: white; text-decoration: none;
                             animation: link-glow 3s infinite alternate;">'
