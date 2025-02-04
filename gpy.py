@@ -5,19 +5,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 from duckduckgo_search import DDGS
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from streamlit.components.v1 import html
 import re
 import random
 
 # --------------------------
-# QUANTUM CORE INIT
+# QUANTUMQUEST CORE INIT
 # --------------------------
 st.set_page_config(
-    page_title="QUERY AI",
+    page_title="QuantumQuest",
     page_icon="🌌",
     layout="wide",
     initial_sidebar_state="collapsed",
-    menu_items={'About': "⚛️ HOLOGRAPHIC COGNITION MATRIX v9.11"}
+    menu_items={'About': "⚛️ QUANTUMQUEST COGNITION MATRIX v10.0"}
 )
 
 # --------------------------
@@ -50,12 +49,13 @@ st.markdown(f"""
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0,0,0,0.9);
+        background: rgba(0,0,0,0.95);
         z-index: 9999;
         display: flex;
         justify-content: center;
         align-items: center;
         backdrop-filter: blur(10px);
+        animation: fade-out 1s ease 3s forwards;
     }}
     
     .welcome-content {{
@@ -67,20 +67,7 @@ st.markdown(f"""
         box-shadow: 0 0 50px rgba(138,43,226,0.5);
     }}
     
-    /* Static Title */
-    .main-title {{
-        font-family: 'Orbitron', sans-serif;
-        font-size: 4rem !important;
-        background: linear-gradient(45deg, #8A2BE2, #9400D3);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(138,43,226,0.7);
-        margin: 2rem 0;
-        position: relative;
-        z-index: 1;
-    }}
-    
-    /* Enhanced Matrix Rain */
+    /* Matrix Rain */
     .code-matrix {{
         position: fixed;
         top: 0;
@@ -89,7 +76,7 @@ st.markdown(f"""
         height: 100vh;
         pointer-events: none;
         z-index: -1;
-        opacity: 0.15;
+        opacity: 0.3;
     }}
     
     .matrix-line {{
@@ -97,7 +84,7 @@ st.markdown(f"""
         color: var(--neon-purple);
         font-family: 'Major Mono Display', monospace;
         font-size: 1.2rem;
-        animation: matrix-fall 20s linear infinite;
+        animation: matrix-fall 10s linear infinite;
         text-shadow: 0 0 10px rgba(138,43,226,0.5);
     }}
     
@@ -133,6 +120,24 @@ st.markdown(f"""
         background: rgba(138,43,226,0.2);
         transform: translateX(10px);
     }}
+    
+    /* Enter Button */
+    .enter-button {{
+        background: var(--neon-purple);
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-family: 'Syne Mono';
+        color: white;
+        animation: neon-pulse 2s infinite;
+    }}
+    
+    @keyframes neon-pulse {{
+        0% {{ box-shadow: 0 0 5px var(--neon-purple); }}
+        50% {{ box-shadow: 0 0 20px var(--neon-purple); }}
+        100% {{ box-shadow: 0 0 5px var(--neon-purple); }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -146,18 +151,14 @@ if st.session_state.first_visit:
     st.markdown("""
     <div class="welcome-overlay">
         <div class="welcome-content">
-            <h2 style="color: var(--neon-purple); font-family: 'Orbitron';">WELCOME TO IRA AI</h2>
-            <p>Initializing quantum cognition matrix...</p>
-            <button onclick="window.parent.document.querySelector('.stApp').dispatchEvent(new CustomEvent('CLOSE_WELCOME'))" 
-                    style="margin-top: 2rem;
-                           background: var(--neon-purple);
-                           border: none;
-                           padding: 1rem 2rem;
-                           border-radius: 50px;
-                           cursor: pointer;
-                           font-family: 'Syne Mono';
-                           color: white;">
-                ENTER THE MATRIX
+            <h1 class="welcome-title" style="font-family: 'Orbitron'; font-size: 4rem; color: var(--neon-purple);">
+                WELCOME TO QUANTUMQUEST
+            </h1>
+            <p style="font-family: 'Syne Mono'; color: var(--neon-purple);">
+                Initializing quantum cognition matrix...
+            </p>
+            <button class="enter-button" onclick="window.parent.document.querySelector('.stApp').dispatchEvent(new CustomEvent('CLOSE_WELCOME'))">
+                ENTER THE QUANTUM REALM
             </button>
         </div>
     </div>
@@ -190,21 +191,20 @@ class QuantumCore:
             with DDGS() as ddgs:
                 return await asyncio.get_event_loop().run_in_executor(
                     ThreadPoolExecutor(), 
-                    lambda: list(ddgs.text(query, max_results=10))  # Fetch more results
+                    lambda: list(ddgs.text(query, max_results=15))
                 )
         except Exception as e:
             st.error(f"Quantum flux detected: {str(e)}")
             return []
     
     def generate_response(self, query, results):
-        # Shuffle results for dynamic responses on refresh
         random.shuffle(results)
         documents = [result['body'] for result in results]
         query_embedding = self.model.encode(query)
         doc_embeddings = self.model.encode(documents)
         
         similarities = cosine_similarity([query_embedding], doc_embeddings)[0]
-        top_indices = np.argsort(similarities)[-5:][::-1]  # Top 5 results
+        top_indices = np.argsort(similarities)[-10:][::-1]  
         compiled = self._format_response(" ".join([documents[i] for i in top_indices]))
         
         return {
@@ -215,9 +215,9 @@ class QuantumCore:
     
     def _format_response(self, text):
         # Improve text formatting
-        text = re.sub(r'(?<=[a-z])\.(?=\s[A-Z])', '.\n\n', text)  # Paragraph breaks
-        text = re.sub(r'(\d+)\.\s', r'\1. ', text)  # Fix numbered lists
-        text = re.sub(r'\s+', ' ', text)  # Remove extra spaces
+        text = re.sub(r'(?<=[a-z])\.(?=\s[A-Z])', '.\n\n', text) 
+        text = re.sub(r'(\d+)\.\s', r'\1. ', text) 
+        text = re.sub(r'\s+', ' ', text)  
         return text
 
 # --------------------------
@@ -226,11 +226,10 @@ class QuantumCore:
 def main():
     st.markdown("""
         <div style="text-align: center; margin: 3rem 0;">
-            <h1 class="main-title">IRA AI</h1>
+            <h1 class="main-title">QuantumQuest</h1>
         </div>
     """, unsafe_allow_html=True)
 
-    # Enhanced Matrix Rain
     st.markdown("""
     <div class="code-matrix" id="codeMatrix"></div>
     <script>
@@ -238,13 +237,13 @@ def main():
         const container = document.getElementById('codeMatrix');
         const characters = '01';
         
-        for(let i = 0; i < 70; i++) {
+        for(let i = 0; i < 150; i++) {  // Increased matrix rain density
             const line = document.createElement('div');
             line.className = 'matrix-line';
-            line.style.left = Math.random() * 100 + 'vw';
-            line.style.animationDuration = Math.random() * 10 + 10 + 's';
-            line.textContent = Array(50).fill().map(() => 
-                characters[Math.floor(Math.random() * characters.length)]
+            line.style.left = math.random() * 100 + 'vw';
+            line.style.animationDuration = math.random() * 5 + 5 + 's';
+            line.textContent = Array(100).fill().map(() => 
+                characters[math.floor(math.random() * characters.length)]
             ).join(' ');
             container.appendChild(line);
         }
@@ -256,15 +255,14 @@ def main():
     if 'core' not in st.session_state:
         st.session_state.core = QuantumCore()
     
-    query = st.text_input(" ", placeholder="🌠 ENTER QUANTUM QUERY PATTERN...", 
+    query = st.text_input(" ", placeholder="🌠 ENTER QUANTUM QUERY ...", 
                         key="search", label_visibility="collapsed").strip()
     
     if query:
         with st.spinner('🌀 Entangling quantum states...'):
             results = asyncio.run(st.session_state.core.hyper_search(query))
             response = st.session_state.core.generate_response(query, results)
-            
-            # Response Display
+
             response_html = f"""
             <div class="quantum-response">
                 <div class="response-content">
@@ -284,5 +282,7 @@ def main():
             """
             st.markdown(response_html, unsafe_allow_html=True)
 
+if __name__ == "__main__":
+    main()
 if __name__ == "__main__":
     main()
