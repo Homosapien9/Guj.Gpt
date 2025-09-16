@@ -1,359 +1,212 @@
 import streamlit as st
+import streamlit_authenticator as stauth
+import yfinance as yf
 import numpy as np
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-from duckduckgo_search import DDGS
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-import re
-import random
+import pandas as pd
+import matplotlib.pyplot as plt
+import xgboost as xgb
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
+from textblob import TextBlob
+import requests
+from datetime import datetime
+from PIL import Image
 
-# --------------------------
-# QUANTUMQUEST CORE INIT
-# --------------------------
-st.set_page_config(
-    page_title="QuantumQuest",
-    page_icon="🌌",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-    menu_items={'About': "⚛️ QUANTUMQUEST COGNITION MATRIX v10.0"}
+# --- Authentication Setup ---
+users = {
+    "usernames": ["user1"],
+    "names": ["User  One"],
+    "passwords": ["$2b$12$KIXQ6q6q6q6q6q6q6q6q6u6q6q6q6q6q6q6q6q6q6q6q6q6q6q6q6"]  # bcrypt hashed password for 'password'
+}
+
+authenticator = stauth.Authenticate(
+    users['names'], users['usernames'], users['passwords'],
+    'some_cookie_name', 'some_signature_key', cookie_expiry_days=30
 )
 
-# --------------------------
-# NEURAL INTERFACE STYLING
-# --------------------------
-st.markdown(f"""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Syne+Mono&family=Major+Mono+Display&display=swap');
-    
-    :root {{
-        --neon-purple: #8A2BE2;
-        --matrix-green: #00ff00;
-        --quantum-gradient: linear-gradient(135deg, #0a0a1a 0%, #1a0033 100%);
-        --glow-intensity: 1;
-    }}
-    
-    body {{
-        background: var(--quantum-gradient);
-        font-family: 'Syne Mono', monospace;
-        color: #fff;
-        overflow-x: hidden;
-        margin: 0;
-        padding: 0;
-    }}
-    
-    /* Welcome Panel */
-    .welcome-overlay {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0,0,0,0.95);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        backdrop-filter: blur(10px);
-        animation: 
-            quantumEntrance 1.5s cubic-bezier(0.4, 0, 0.2, 1),
-            quantumExit 1s cubic-bezier(0.4, 0, 0.2, 1) 3s forwards;
-    }}
-    
-    @keyframes quantumEntrance {{
-        0% {{ 
-            transform: scale(0) rotate(360deg);
-            opacity: 0;
-        }}
-        80% {{
-            transform: scale(1.1) rotate(-10deg);
-            opacity: 1;
-        }}
-        100% {{
-            transform: scale(1) rotate(0deg);
-        }}
-    }}
-    
-    @keyframes quantumExit {{
-        0% {{ 
-            transform: translateY(0) scale(1);
-            opacity: 1;
-        }}
-        100% {{ 
-            transform: translateY(100vh) scale(0.2);
-            opacity: 0;
-        }}
-    }}
-    
-    .holographic-border {{
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-            linear-gradient(45deg, 
-                rgba(138,43,226,0.2),
-                rgba(75,0,130,0.4),
-                rgba(138,43,226,0.2));
-        animation: hologram 4s linear infinite;
-        z-index: -1;
-    }}
-    
-    @keyframes hologram {{
-        0% {{ opacity: 0.8; transform: rotate(0deg); }}
-        100% {{ opacity: 0.8; transform: rotate(360deg); }}
-    }}
-    
-    .quantum-particles span {{
-        position: absolute;
-        background: var(--neon-purple);
-        border-radius: 50%;
-        pointer-events: none;
-        animation: 
-            particle-float 3s infinite,
-            particle-pulse 1.5s infinite;
-    }}
-    
-    @keyframes particle-float {{
-        0%, 100% {{ transform: translateY(0) translateX(0); }}
-        50% {{ transform: translateY(-100px) translateX(50px); }}
-    }}
-    
-    @keyframes particle-pulse {{
-        0%, 100% {{ opacity: 0.3; }}
-        50% {{ opacity: 1; }}
-    }}
-    
-    .welcome-title {{
-        animation: 
-            title-glow 2s ease-in-out infinite alternate,
-            title-float 3s ease-in-out infinite;
-    }}
-    
-    @keyframes title-glow {{
-        0% {{ text-shadow: 0 0 10px var(--neon-purple); }}
-        100% {{ text-shadow: 0 0 30px var(--neon-purple); }}
-    }}
-    
-    @keyframes title-float {{
-        0%, 100% {{ transform: translateY(0); }}
-        50% {{ transform: translateY(-10px); }}
-    }}
-    
-    /* Enhanced Matrix Rain */
-    .matrix-rain {{
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        z-index: -1;
-        opacity: 0.3;
-    }}
-    
-    .matrix-line {{
-        position: absolute;
-        color: var(--neon-purple);
-        font-family: 'Major Mono Display', monospace;
-        font-size: 1.2rem;
-        animation: matrix-fall 10s linear infinite;
-        text-shadow: 0 0 10px rgba(138,43,226,0.5);
-    }}
-    
-    @keyframes matrix-fall {{
-        0% {{ transform: translateY(-100vh); opacity: 0; }}
-        2% {{ opacity: 1; }}
-        100% {{ transform: translateY(100vh); opacity: 0; }}
-    }}
-    
-    /* Quantum Input Field */
-    .stTextInput input {{
-        background: rgba(138,43,226,0.1) !important;
-        border: 1px solid var(--neon-purple) !important;
-        color: white !important;
-        animation: input-glow 2s infinite alternate;
-    }}
-    
-    @keyframes input-glow {{
-        0% {{ box-shadow: 0 0 5px rgba(138,43,226,0.3); }}
-        100% {{ box-shadow: 0 0 20px rgba(138,43,226,0.5); }}
-    }}
-    
-    /* Signature Animation */
-    .signature {{
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        font-family: 'Syne Mono';
-        color: rgba(138,43,226,0.8);
-        animation: signature-float 4s ease-in-out infinite;
-    }}
-    
-    @keyframes signature-float {{
-        0%, 100% {{ transform: translateY(0); }}
-        50% {{ transform: translateY(-10px); }}
-    }}
-    </style>
-""", unsafe_allow_html=True)
+name, authentication_status, username = authenticator.login('Login', 'main')
 
-# --------------------------
-# WELCOME PANEL
-# --------------------------
-if 'first_visit' not in st.session_state:
-    st.session_state.first_visit = True
+if authentication_status:
+    st.write(f"Welcome *{name}*")
+    authenticator.logout('Logout', 'sidebar')
 
-if st.session_state.first_visit:
-    particles = "".join(
-        f'<span style="width: {random.randint(2,6)}px; height: {random.randint(2,6)}px; '
-        f'top: {random.randint(10,90)}%; left: {random.randint(10,90)}%; '
-        f'animation-delay: {random.random()*2}s;"></span>'
-        for _ in range(50)
-    )
-    
-    st.markdown(f"""
-    <div class="welcome-overlay">
-        <div class="welcome-content">
-            <div class="holographic-border"></div>
-            <div class="quantum-particles">{particles}</div>
-            <h1 class="welcome-title" style="font-family: 'Orbitron'; font-size: 4rem; color: var(--neon-purple); margin: 2rem;">
-                QUANTUMQUEST ONLINE
-            </h1>
-            <p style="font-family: 'Syne Mono'; color: var(--neon-purple); margin: 1.5rem;">
-                █▓▒░ COGNITIVE MATRIX ACTIVATED ░▒▓█
-            </p>
-        </div>
-    </div>
-    <div class="signature">🌀 forged in the quantum realm by u/homosapien9</div>
-    """, unsafe_allow_html=True)
-    
-    # Auto-close after animation
-    st.components.v1.html("""
-    <script>
-    setTimeout(function() {
-        window.parent.document.querySelector('.welcome-overlay').style.display = 'none';
-    }, 4000);
-    </script>
-    """)
-    st.session_state.first_visit = False
+    # --- Helper Functions for Technical Indicators ---
+    def compute_macd(df, fast=12, slow=26, signal=9):
+        macd_line = df['Close'].ewm(span=fast, adjust=False).mean() - df['Close'].ewm(span=slow, adjust=False).mean()
+        signal_line = macd_line.ewm(span=signal, adjust=False).mean()
+        return macd_line, signal_line
 
-# --------------------------
-# QUANTUM MODULES
-# --------------------------
-@st.cache_resource
-def load_cognitive_engine():
-    return SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+    def compute_rsi(df, window=14):
+        delta = df['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        return rsi
 
-class QuantumCore:
-    def __init__(self):
-        self.model = load_cognitive_engine()
-        self.history = []
-        
-    async def hyper_search(self, query):
+    def compute_stochastic(df, window=14):
+        low_min = df['Low'].rolling(window=window).min()
+        high_max = df['High'].rolling(window=window).max()
+        stochastic = 100 * (df['Close'] - low_min) / (high_max - low_min)
+        return stochastic
+
+    def compute_bollinger_bands(df, window=20):
+        df['Middle_BB'] = df['Close'].rolling(window=window).mean()
+        df['Std_Dev'] = df['Close'].rolling(window=window).std()
+        df['Upper_BB'] = df['Middle_BB'] + (df['Std_Dev'] * 2)
+        df['Lower_BB'] = df['Middle_BB'] - (df['Std_Dev'] * 2)
+        return df
+
+    # --- News Sentiment Analysis ---
+    def fetch_news_headlines(stock_symbol):
+        # Replace YOUR_API_KEY with your actual NewsAPI key
+        api_key = "YOUR_API_KEY"
+        url = f"https://newsapi.org/v2/everything?q={stock_symbol}&language=en&sortBy=publishedAt&apiKey={api_key}"
         try:
-            with DDGS() as ddgs:
-                return await asyncio.get_event_loop().run_in_executor(
-                    ThreadPoolExecutor(), 
-                    lambda: list(ddgs.text(query, max_results=15))
-                )
+            response = requests.get(url)
+            response.raise_for_status()
+            articles = response.json().get('articles', [])
+            headlines = [article['title'] for article in articles]
+            return headlines
         except Exception as e:
-            st.error(f"Quantum flux detected: {str(e)}")
+            st.warning(f"News API error: {e}")
             return []
-    
-    def generate_response(self, query, results):
-        random.shuffle(results)
-        documents = [result['body'] for result in results]
-        query_embedding = self.model.encode(query)
-        doc_embeddings = self.model.encode(documents)
-        
-        similarities = cosine_similarity([query_embedding], doc_embeddings)[0]
-        top_indices = np.argsort(similarities)[-10:][::-1]  
-        compiled = self._format_response(" ".join([documents[i] for i in top_indices]))
-        
-        return {
-            'content': compiled,
-            'sources': [results[i] for i in top_indices],
-            'confidence': np.mean(similarities[top_indices])
-        }
-    
-    def _format_response(self, text):
-        text = re.sub(r'(?<=[a-z])\.(?=\s[A-Z])', '.\n\n', text) 
-        text = re.sub(r'(\d+)\.\s', r'\1. ', text) 
-        return re.sub(r'\s+', ' ', text).strip()
 
-# --------------------------
-# MAIN INTERFACE
-# --------------------------
-def main():
-    st.markdown("""
-        <div style="text-align: center; margin: 3rem 0;">
-            <h1 style="font-family: 'Orbitron'; color: var(--neon-purple); 
-                animation: title-glow 2s infinite alternate;">
-                QuantumQuest
-            </h1>
-        </div>
-    """, unsafe_allow_html=True)
+    def compute_sentiment_score(headlines):
+        if not headlines:
+            return 0
+        scores = [TextBlob(headline).sentiment.polarity for headline in headlines]
+        return np.mean(scores)
 
-    st.markdown("""
-    <div class="matrix-rain" id="codeMatrix"></div>
-    <script>
-    function createMatrix() {
-        const container = document.getElementById('codeMatrix');
-        const characters = '01█▓▒░◇◆♤♧☢⚛';
-        
-        for(let i = 0; i < 200; i++) {
-            const line = document.createElement('div');
-            line.className = 'matrix-line';
-            line.style.left = math.random() * 100 + 'vw';
-            line.style.animationDuration = math.random() * 3 + 5 + 's';
-            line.style.color = `hsl(${math.random()*360}deg, 70%, 60%)`;
-            line.textContent = Array(100).fill().map(() => 
-                characters[math.floor(math.random() * characters.length)]
-            ).join(' ');
-            container.appendChild(line);
-        }
+    # --- Fetch Stock Data ---
+    def get_stock_data(stock_symbol, start_date, end_date):
+        try:
+            df = yf.download(stock_symbol, start=start_date, end=end_date)
+            if 'Adj Close' in df.columns:
+                df.drop(columns=['Adj Close'], inplace=True)
+            return df
+        except Exception as e:
+            st.error(f"Error fetching stock data: {e}")
+            return pd.DataFrame()
+
+    # --- Streamlit UI ---
+    st.title("MarketMantra - Stock Trend Predictor with Authentication & News Sentiment")
+
+    stock_symbol = st.text_input("Enter Stock Symbol (e.g., AAPL, MSFT, ^BSESN)", value="^BSESN").upper()
+    start_date = st.date_input("Start Date", pd.to_datetime("2023-01-01"))
+    end_date = st.date_input("End Date", datetime.now().date())
+
+    if start_date >= end_date:
+        st.error("Start date must be before end date.")
+        st.stop()
+
+    df = get_stock_data(stock_symbol, start_date, end_date)
+    if df.empty:
+        st.warning("No data found for the selected stock or date range.")
+        st.stop()
+
+    # --- Feature Engineering ---
+    df['Previous Close'] = df['Close'].shift(1)
+    df['Daily Return'] = df['Close'].pct_change()
+    df['MACD'], df['MACD_Signal'] = compute_macd(df)
+    df['RSI'] = compute_rsi(df)
+    df['Stochastic'] = compute_stochastic(df)
+    df = compute_bollinger_bands(df)
+    df['Target'] = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
+    df.dropna(inplace=True)
+
+    # --- News Sentiment Feature ---
+    headlines = fetch_news_headlines(stock_symbol)
+    sentiment_score = compute_sentiment_score(headlines)
+    # Add sentiment score as a constant feature for all rows (or just latest row)
+    df['News_Sentiment'] = sentiment_score
+
+    # --- Prepare Features and Target ---
+    feature_cols = ['Previous Close', 'Daily Return', 'MACD', 'MACD_Signal', 'RSI', 'Stochastic', 'Upper_BB', 'Lower_BB', 'News_Sentiment']
+    features = df[feature_cols]
+    target = df['Target']
+
+    scaler = StandardScaler()
+    features_scaled = scaler.fit_transform(features)
+
+    X_train, X_valid, Y_train, Y_valid = train_test_split(features_scaled, target, test_size=0.1, random_state=42)
+
+    # --- Models ---
+    models = {
+        "Random Forest": RandomForestClassifier(n_estimators=100, max_depth=20, random_state=50),
+        "Gradient Boosting": GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=50),
+        "XGBoost": xgb.XGBClassifier(n_estimators=100, max_depth=5, learning_rate=0.1, random_state=50, use_label_encoder=False, eval_metric='logloss'),
+        "Decision Tree": DecisionTreeClassifier(random_state=50)
     }
-    createMatrix();
-    </script>
-    """, unsafe_allow_html=True)
 
-    if 'core' not in st.session_state:
-        st.session_state.core = QuantumCore()
-    
-    query = st.text_input(" ", placeholder="🌌 ENTER QUANTUM QUERY ...", 
-                        key="search", label_visibility="collapsed").strip()
-    
-    if query:
-        with st.spinner('🌀 Entangling quantum states...'):
-            results = asyncio.run(st.session_state.core.hyper_search(query))
-            response = st.session_state.core.generate_response(query, results)
+    model_predictions = []
+    for model_name, model in models.items():
+        model.fit(X_train, Y_train)
+        preds = model.predict(X_valid)
+        model_predictions.append(preds)
 
-            response_html = f"""
-<div style="border: 1px solid rgba(138,43,226,0.3);
-    background: linear-gradient(145deg, rgba(26,0,51,0.4), rgba(10,10,26,0.6));
-    padding: 2rem;
-    margin: 2rem 0;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    animation: fadeIn 1s ease;">
-    <div style="animation: pulsate 2s infinite alternate;">
-        {response['content']}
-    </div>
-    <div style="margin-top: 2rem;">
-        <h3 style="color: var(--neon-purple); border-bottom: 1px solid rgba(138,43,226,0.3);">
-            Quantum Sources
-        </h3>
-        {"".join(
-            f'<a href="{result["href"]}" target="_blank" style="display: block; padding: 1rem; margin: 1rem 0;
-            background: rgba(138,43,226,0.1); border-radius: 15px; border: 1px solid rgba(138,43,226,0.3);
-            transition: all 0.3s ease; color: white; text-decoration: none;
-            animation: link-glow 3s infinite alternate;">'
-            f'<span style="color: var(--neon-purple);">⇲</span> {result["title"]}</a>'
-            for result in response['sources'])}
-    </div>
-</div>
-"""
+    model_predictions = np.array(model_predictions)
+    avg_preds = np.mean(model_predictions, axis=0)
+    final_preds = np.round(avg_preds)
+
+    # --- Confusion Matrix ---
+    cm = confusion_matrix(Y_valid, final_preds)
+    st.subheader("Confusion Matrix (Ensemble Prediction)")
+    fig, ax = plt.subplots(figsize=(5, 5))
+    cax = ax.matshow(cm, cmap=plt.cm.Blues)
+    plt.title('Confusion Matrix')
+    fig.colorbar(cax)
+    ax.set_xticklabels([''] + ['Down', 'Up'])
+    ax.set_yticklabels([''] + ['Down', 'Up'])
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    for (i, j), val in np.ndenumerate(cm):
+        ax.text(j, i, val, ha='center', va='center')
+    st.pyplot(fig)
+
+    # --- Model Accuracy Display ---
+    st.subheader("Model Accuracies")
+    accuracies = {}
+    for model_name, model in models.items():
+        y_pred = model.predict(X_valid)
+        acc = accuracy_score(Y_valid, y_pred) * 100
+        accuracies[model_name] = acc
+        st.write(f"{model_name}: {acc:.2f}%")
+
+    selected_model_name = st.selectbox("Select Model for Prediction", list(models.keys()))
+    selected_model = models[selected_model_name]
+
+    # --- Predict Next Day Trend ---
+    latest_features = df[feature_cols].iloc[-1].values.reshape(1, -1)
+    latest_features_scaled = scaler.transform(latest_features)
+    pred_prob = selected_model.predict_proba(latest_features_scaled)[0]
+    pred_class = selected_model.predict(latest_features_scaled)[0]
+
+    st.subheader("Next Day Prediction")
+    if pred_class == 1:
+        st.success(f"The stock {stock_symbol} is likely to go UP tomorrow with probability {pred_prob[1]*100:.2f}%")
+    else:
+        st.error(f"The stock {stock_symbol} is likely to go DOWN tomorrow with probability {pred_prob[0]*100:.2f}%")
+
+    # --- Display News Sentiment ---
+    st.subheader("Latest News Sentiment")
+    st.write(f"Sentiment score based on recent news headlines: {sentiment_score:.3f} (Range: -1 negative to +1 positive)")
+    if headlines:
+        st.write("Sample Headlines:")
+        for headline in headlines[:5]:
+            st.write(f"- {headline}")
+    else:
+        st.write("No recent news headlines found or API error.")
+
+else:
+    if authentication_status is False:
+        st.error("Username/password is incorrect")
+    elif authentication_status is None:
+        st.warning("Please enter your username and password")
+
 
 st.markdown(response_html, unsafe_allow_html=True)
 
