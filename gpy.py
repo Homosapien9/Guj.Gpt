@@ -318,7 +318,7 @@ qr_image = Image.open("Website qr.png")
 col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown('<h1 style="color: white; font-size: 29.7px;">MarketMantra - Stock Trend Predictor</h1>', unsafe_allow_html=True)
-    st.subheader("~ Developed By u/Homosapien9")
+    st.subheader("~ Developed By JEFF")
 with col2:
     st.image(qr_image, caption="scan for website", width=100)
 
