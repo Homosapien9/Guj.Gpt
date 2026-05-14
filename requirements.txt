@@ -1,6 +1,12 @@
-streamlit>=1.22.0
-sentence-transformers
-duckduckgo-search
-scikit-learn
+streamlit
+requests
 numpy
-regex
+pandas
+xgboost
+yfinance
+matplotlib
+scikit-learn
+beautifulsoup4
+Pillow
+google
+googlesearch-python
