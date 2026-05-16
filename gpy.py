@@ -590,10 +590,10 @@ with tab4:
         final_up_prob = np.mean(latest_probs)
         
         st.subheader("Next Day Prediction")
-            if final_up_prob > 0.5:
-                st.success(f"UP ({final_up_prob*100:.2f}% probability)")
-            else:
-                st.error(f"DOWN ({(1-final_up_prob)*100:.2f}% probability)")
+        if final_up_prob > 0.5:
+             st.success(f"UP ({final_up_prob*100:.2f}% probability)")
+        else:
+            st.error(f"DOWN ({(1-final_up_prob)*100:.2f}% probability)")
             st.caption("⚠️ This is a statistical estimate, not financial advice. ML models on stock data are inherently noisy — always do your own research.")
 
 # ---------- Tab 5: ROI Calculator ----------
