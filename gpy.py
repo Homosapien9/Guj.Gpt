@@ -158,14 +158,23 @@ def google_search_answer(query):
 # =========================
 # CHATBOT HELPER (Information Hub)
 # =========================
-def get_stock_price(stock_symbol):
-    """Fetch current price using yfinance (stable)."""
-    try:
-        ticker = yf.Ticker(stock_symbol)
-        price = ticker.fast_info['last_price']
-        return round(price, 2)
-    except Exception:
-        return None
+# ---- Fetch raw data ----
+df_raw = get_stock_data(stock_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+
+# ---- Today's Price Change Banner ----
+try:
+    ticker_today = yf.Ticker(stock_symbol)
+    fast = ticker_today.fast_info
+    current_p = fast['last_price']
+    prev_close = fast['previous_close']
+    change = current_p - prev_close
+    change_pct = (change / prev_close) * 100
+    if change >= 0:
+        st.success(f"📈 {stock_symbol}  |  ₹{current_p:,.2f}  |  +{change:,.2f} (+{change_pct:.2f}%) today")
+    else:
+        st.error(f"📉 {stock_symbol}  |  ₹{current_p:,.2f}  |  {change:,.2f} ({change_pct:.2f}%) today")
+except Exception:
+    pass
 
 def get_investment_info(query):
     """Answer investment questions using predefined dictionary or Google fallback."""
