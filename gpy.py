@@ -457,7 +457,7 @@ with tab2:
 # ---------- Tab 3: Technical Indicators ----------
 with tab3:
     st.subheader("Technical Indicators")
-   if sma_50:
+    if sma_50:
         st.header("Simple Moving Average (SMA) of 50 Days")
         st.write("The **50-day** SMA looks at the average price over the last 50 days")
         df_sma50 = df_raw.copy() 
