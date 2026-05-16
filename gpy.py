@@ -30,7 +30,6 @@ if 'watchlist' not in st.session_state:
 # =========================
 # DATA FETCH (robust)
 # =========================
-@st.cache_data
 def get_stock_data(stock_symbol, start_date, end_date):
     """Download stock data with error handling."""
     try:
@@ -124,6 +123,7 @@ def plot_volumetric_chart(df):
 # FEATURE ENGINEERING (for ML)
 # =========================
 def add_features(df):
+    """Add technical features and target for the model."""
     df = df.copy()
     df['Return'] = df['Close'].pct_change()
     df['SMA_10'] = df['Close'].rolling(10).mean()
@@ -136,7 +136,6 @@ def add_features(df):
     df['Lag3'] = df['Close'].shift(3)
     df['Target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
     df.dropna(inplace=True)
-    df = df.iloc[:-1]  
     return df
 
 # =========================
@@ -158,23 +157,19 @@ def google_search_answer(query):
 # =========================
 # CHATBOT HELPER (Information Hub)
 # =========================
-# ---- Fetch raw data ----
-df_raw = get_stock_data(stock_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
-
-# ---- Today's Price Change Banner ----
-try:
-    ticker_today = yf.Ticker(stock_symbol)
-    fast = ticker_today.fast_info
-    current_p = fast['last_price']
-    prev_close = fast['previous_close']
-    change = current_p - prev_close
-    change_pct = (change / prev_close) * 100
-    if change >= 0:
-        st.success(f"📈 {stock_symbol}  |  ₹{current_p:,.2f}  |  +{change:,.2f} (+{change_pct:.2f}%) today")
-    else:
-        st.error(f"📉 {stock_symbol}  |  ₹{current_p:,.2f}  |  {change:,.2f} ({change_pct:.2f}%) today")
-except Exception:
-    pass
+def get_stock_price(stock_symbol):
+    """Fetch current price from Yahoo Finance API."""
+    try:
+        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={stock_symbol}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        if 'quoteResponse' in data and 'result' in data['quoteResponse'] and len(data['quoteResponse']['result']) > 0:
+            stock_data = data['quoteResponse']['result'][0]
+            return stock_data['regularMarketPrice']
+        return None
+    except Exception:
+        return None
 
 def get_investment_info(query):
     """Answer investment questions using predefined dictionary or Google fallback."""
@@ -319,15 +314,13 @@ def calculate_investment_return(start_date_str, stock_ticker, investment_amount)
 # STREAMLIT UI
 # =========================
 # ---- Header with QR code ----
+qr_image = Image.open("Website qr.png")
 col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown('<h1 style="color: white; font-size: 29.7px;">MarketMantra - Stock Trend Predictor</h1>', unsafe_allow_html=True)
     st.subheader("~ Developed By JEFF")
 with col2:
-    import os
-    if os.path.exists("Website qr.png"):
-        qr_image = Image.open("Website qr.png")
-        st.image(qr_image, caption="scan for website", width=100)
+    st.image(qr_image, caption="scan for website", width=100)
 
 # ---- Stock selection ----
 with st.expander("Select Stock And Data Range (Minimum 5 Days Gap)"):
@@ -363,29 +356,11 @@ bollinger_ind = "Bollinger Bands" in selected_indicators
 rsi_ind = "(RSI) Relative Strength Index" in selected_indicators
 volume_ind = "Volume Chart" in selected_indicators
 
-# ---- Fundamentals Card ----
-with st.expander("📊 Company Fundamentals"):
-    try:
-        ticker_info = yf.Ticker(stock_symbol).info
-        col_f1, col_f2, col_f3 = st.columns(3)
-        with col_f1:
-            st.metric("Current Price", f"{ticker_info.get('currentPrice', 'N/A')}")
-            st.metric("Market Cap", f"{ticker_info.get('marketCap', 0):,}")
-            st.metric("Sector", ticker_info.get('sector', 'N/A'))
-        with col_f2:
-            st.metric("P/E Ratio", ticker_info.get('trailingPE', 'N/A'))
-            st.metric("EPS", ticker_info.get('trailingEps', 'N/A'))
-            st.metric("Dividend Yield", f"{round(ticker_info.get('dividendYield', 0) * 100, 2)}%")
-        with col_f3:
-            st.metric("52-Week High", ticker_info.get('fiftyTwoWeekHigh', 'N/A'))
-            st.metric("52-Week Low", ticker_info.get('fiftyTwoWeekLow', 'N/A'))
-            st.metric("Avg Volume", f"{ticker_info.get('averageVolume', 0):,}")
-        st.caption(ticker_info.get('longBusinessSummary', '')[:300] + "...")
-    except Exception as e:
-        st.warning(f"Could not load fundamentals: {e}")
-        if df_raw.empty:
-            st.warning("No data found for the selected stock or date range. Model needs at least 5 days to predict results.")
-            st.stop()
+# ---- Fetch raw data ----
+df_raw = get_stock_data(stock_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
+if df_raw.empty:
+    st.warning("No data found for the selected stock or date range. Model needs at least 5 days to predict results.")
+    st.stop()
 
 # ---- Data Visualization ----
 with st.expander("Data Visualization"):
@@ -469,10 +444,9 @@ with tab3:
     if sma_50:
         st.header("Simple Moving Average (SMA) of 50 Days")
         st.write("The **50-day** SMA looks at the average price over the last 50 days")
-        df_sma50 = df_raw.copy() 
-        df_sma50['SMA_50'] = df_sma50['Close'].rolling(window=50).mean()
+        df_raw['SMA_50'] = df_raw['Close'].rolling(window=50).mean()
         fig, ax = plt.subplots(figsize=(15, 5))
-        ax.plot(df_sma50['SMA_50'], label="50-Day SMA", color='orange')
+        ax.plot(df_raw['SMA_50'], label="50-Day SMA", color='orange')
         ax.set_title(f"{stock_symbol} - 50-Day Simple Moving Average", fontsize=15)
         ax.set_ylabel('Price', fontsize=12)
         ax.set_xlabel('Date', fontsize=12)
@@ -482,10 +456,9 @@ with tab3:
     if sma_200:
         st.header("Simple Moving Average (SMA) of 200 Days")
         st.write("The **200-day** SMA looks at the average price over the last 200 days")
-        df_sma200 = df_raw.copy()
-        df_sma200['SMA_200'] = df_sma200['Close'].rolling(window=200).mean()
+        df_raw['SMA_200'] = df_raw['Close'].rolling(window=200).mean()
         fig, ax = plt.subplots(figsize=(15, 5))
-        ax.plot(df_sma200['SMA_200'], label="200-Day SMA", color='green')
+        ax.plot(df_raw['SMA_200'], label="200-Day SMA", color='green')
         ax.set_title(f"{stock_symbol} - 200-Day Simple Moving Average", fontsize=15)
         ax.set_ylabel('Price', fontsize=12)
         ax.set_xlabel('Date', fontsize=12)
@@ -597,13 +570,12 @@ with tab4:
         latest_features = scaler.transform(features.iloc[-1:].values)
         latest_probs = [m.predict_proba(latest_features)[0][1] for m in models.values()]
         final_up_prob = np.mean(latest_probs)
-        
+
         st.subheader("Next Day Prediction")
         if final_up_prob > 0.5:
-             st.success(f"UP ({final_up_prob*100:.2f}% probability)")
+            st.success(f"UP ({final_up_prob*100:.2f}% probability)")
         else:
             st.error(f"DOWN ({(1-final_up_prob)*100:.2f}% probability)")
-            st.caption("⚠️ This is a statistical estimate, not financial advice. ML models on stock data are inherently noisy — always do your own research.")
 
 # ---------- Tab 5: ROI Calculator ----------
 with tab5:
