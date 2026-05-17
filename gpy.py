@@ -216,20 +216,27 @@ with st.expander("Select Stock And Data Range (Minimum 5 Days Gap)"):
      end_date = st.date_input("End Date", datetime.now().date())
 
 # ---- Indicator selection ----
-with st.expander("Select Technical Indicators"):
-     st.header("Technical Indicators")
-     indicator_options = ["50-Day Simple Moving Average (SMA)",
-                          "200-Day Simple Moving Average (SMA)",
-                          "MACD (Moving Average Convergence Divergence)",
-                          "Stochastic Oscillator",
-                          "Bollinger Bands",
-                          "(RSI) Relative Strength Index",
-                          "Volume Chart"]
+with st.expander("Select Technical Indicators"): # retry more better
+    st.header("Technical Indicators")
+
+    indicator_options = [
+        "50-Day Simple Moving Average (SMA)",
+        "200-Day Simple Moving Average (SMA)",
+        "MACD (Moving Average Convergence Divergence)",
+        "Stochastic Oscillator",
+        "Bollinger Bands",
+        "Relative Strength Index (RSI)",
+        "Volume Chart"
+    ]
+
     selected_indicators = st.multiselect(
-    "Select Technical Indicators to Display",
-    indicator_options,
-    default=["50-Day Simple Moving Average (SMA)",
-             "200-Day Simple Moving Average (SMA)"])
+        "Select Technical Indicators to Display",
+        indicator_options,
+        default=[
+            "50-Day Simple Moving Average (SMA)",
+            "200-Day Simple Moving Average (SMA)"
+        ]
+    )
 # Flags for indicators
 sma_50 = "50-Day Simple Moving Average (SMA)" in selected_indicators
 sma_200 = "200-Day Simple Moving Average (SMA)" in selected_indicators
