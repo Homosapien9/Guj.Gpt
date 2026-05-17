@@ -225,8 +225,11 @@ with st.expander("Select Technical Indicators"):
                           "Bollinger Bands",
                           "(RSI) Relative Strength Index",
                           "Volume Chart"]
-    selected_indicators = st.multiselect("Select Technical Indicators to Display",indicator_options,default=["50-Day Simple Moving Average (SMA)", "200-Day Simple Moving Average (SMA)"] )
-
+    selected_indicators = st.multiselect(
+    "Select Technical Indicators to Display",
+    indicator_options,
+    default=["50-Day Simple Moving Average (SMA)",
+             "200-Day Simple Moving Average (SMA)"])
 # Flags for indicators
 sma_50 = "50-Day Simple Moving Average (SMA)" in selected_indicators
 sma_200 = "200-Day Simple Moving Average (SMA)" in selected_indicators
