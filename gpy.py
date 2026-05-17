@@ -294,9 +294,7 @@ if watchlist_add:
 df_ml = add_features(df_raw)  # adds features and drops NA
 
 # ---- Tabs ----
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "Portfolio", "Watchlist", "Technical Indicators", "Predictions", "Calculate ROI", "Information Hub"
-])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Portfolio", "Watchlist", "Technical Indicators", "Predictions", "Calculate ROI"])
 
 # ---------- Tab 1: Portfolio ----------
 with tab1:
