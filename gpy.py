@@ -282,33 +282,45 @@ def get_investment_info(query):
 # =========================
 # ROI CALCULATOR
 # =========================
-def calculate_investment_return(start_date_str, stock_ticker, investment_amount):
-    hist = get_stock_data(stock_ticker, start_date_str, datetime.today().strftime('%Y-%m-%d'))
-    if hist.empty:
-        st.error("No data available for ROI calculation.")
-        return
-    start_date_dt = pd.to_datetime(start_date_str)
-    if start_date_dt not in hist.index:
-        st.error(f"Start date {start_date_str} not in historical data.")
-        return
-    start_price = hist.loc[start_date_dt]["Close"]
-    current_price = hist["Close"].iloc[-1]
-    total_dividends = hist["Dividends"].sum() if "Dividends" in hist.columns else 0
-    final_value = (investment_amount / start_price) * current_price + total_dividends
-    total_return = final_value - investment_amount
-    return_percentage = (total_return / investment_amount) * 100
+def calculate_advanced_roi(ticker, start_date, investment):
+    df = yf.download(ticker, start=start_date)
+    benchmark = yf.download("^BSESN", start=start_date)  # Sensex benchmark
+    
+    if df.empty:
+        return None
 
-    st.subheader(f"Investment in {stock_ticker} from {start_date_str}")
-    st.write(f"Initial Investment: {investment_amount:,.2f}")
-    st.write(f"Start Price: {start_price:,.2f}")
-    st.write(f"Current Price: {current_price:,.2f}")
-    if total_dividends > 0:
-        st.write(f"Total Dividends Earned: {total_dividends:,.2f}")
-    else:
-        st.write("This stock does not offer dividends or no dividends were paid during the selected period.")
-    st.write(f"Final Value (including price change and dividends): {final_value:,.2f}")
-    st.write(f"Total Return: {total_return:,.2f}")
-    st.write(f"Return Percentage: {return_percentage:,.2f}%")
+    start_price = df['Close'].iloc[0]
+    current_price = df['Close'].iloc[-1]
+
+    # Basic ROI
+    shares = investment / start_price
+    final_value = shares * current_price
+    total_return_pct = (final_value - investment) / investment * 100
+
+    # CAGR
+    days = (df.index[-1] - df.index[0]).days
+    years = days / 365
+    cagr = ((final_value / investment) ** (1/years) - 1) * 100
+
+    # Volatility
+    returns = df['Close'].pct_change().dropna()
+    volatility = returns.std() * np.sqrt(252) * 100
+
+    # Sharpe ratio
+    risk_free_rate = 0.06  # 6% India avg
+    sharpe = (cagr/100 - risk_free_rate) / (volatility/100)
+
+    # Benchmark comparison
+    bench_return = (benchmark['Close'].iloc[-1] - benchmark['Close'].iloc[0]) / benchmark['Close'].iloc[0] * 100
+
+    return {
+        "Final Value": final_value,
+        "Total Return %": total_return_pct,
+        "CAGR %": cagr,
+        "Volatility %": volatility,
+        "Sharpe Ratio": sharpe,
+        "Sensex Return %": bench_return
+    }
 
 # =========================
 # STREAMLIT UI
@@ -579,28 +591,92 @@ with tab4:
 
 # ---------- Tab 5: ROI Calculator ----------
 with tab5:
-    st.subheader("Stock Investment Return Calculator")
-    roi_start_date = st.date_input("Enter Start Date for ROI", pd.to_datetime("2016-01-01"), key="roi_start")
-    investment_amount = st.number_input("Enter Investment Amount", min_value=1, value=1000000, key="roi_amount")
-    if roi_start_date > datetime.today().date():
-        st.warning("Start date cannot be in the future. Using today's date.")
-    if stock_symbol and roi_start_date and investment_amount:
-        calculate_investment_return(roi_start_date.strftime('%Y-%m-%d'), stock_symbol, investment_amount)
+    st.subheader("Advanced Investment Analytics")
 
-# ---------- Tab 6: Information Hub (Chatbot with Google fallback) ----------
+    roi_start_date = st.date_input(
+        "Investment Start Date",
+        pd.to_datetime("2016-01-01"),
+        key="roi_start"
+    )
+
+    investment_amount = st.number_input(
+        "Investment Amount (₹)",
+        min_value=1000,
+        value=100000,
+        step=1000
+    )
+
+    if st.button("Calculate Advanced ROI"):
+        result = calculate_advanced_roi(stock_symbol, roi_start_date, investment_amount)
+
+        if result:
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Final Value", f"₹{result['Final Value']:,.0f}")
+            col2.metric("Total Return", f"{result['Total Return %']:.2f}%")
+            col3.metric("CAGR", f"{result['CAGR %']:.2f}%")
+
+            col4, col5, col6 = st.columns(3)
+            col4.metric("Volatility", f"{result['Volatility %']:.2f}%")
+            col5.metric("Sharpe Ratio", f"{result['Sharpe Ratio']:.2f}")
+            col6.metric("Sensex Return", f"{result['Sensex Return %']:.2f}%")
+
+            # Compare vs benchmark chart
+            st.subheader("Stock vs Sensex Performance")
+
+            stock_df = yf.download(stock_symbol, start=roi_start_date)
+            sensex_df = yf.download("^BSESN", start=roi_start_date)
+
+            stock_norm = stock_df['Close'] / stock_df['Close'].iloc[0]
+            sensex_norm = sensex_df['Close'] / sensex_df['Close'].iloc[0]
+
+            fig, ax = plt.subplots(figsize=(12,5))
+            ax.plot(stock_norm, label=stock_symbol)
+            ax.plot(sensex_norm, label="Sensex")
+            ax.legend()
+            st.pyplot(fig)
+
+# ---------- Tab 6: AI Financial Assistant ----------
 with tab6:
-    st.subheader("Information Hub")
-    st.write("Ask anything about stocks, investments, or finance. I'll answer from my knowledge base or search the web.")
-    user_query = st.text_input("Ask a question about investments, stocks, or finance:")
-    if user_query:
-        response = get_investment_info(user_query)
-        if isinstance(response, dict):
-            st.write("**Stock Price Comparison:**")
-            for sym, price_info in response.items():
-                st.write(f"- {sym}: {price_info}")
-        else:
-            st.write(response)
+    st.subheader("AI Financial Assistant 🤖")
 
+    st.write("Ask about stocks, news, company research, market mood, or investing tips.")
+
+    # Suggested prompts
+    with st.expander("💡 Try asking"):
+        st.write("""
+        • Price of TCS  
+        • TCS news  
+        • Market mood today  
+        • Should I buy Reliance?  
+        • Compare AAPL and MSFT  
+        • Tell me about Infosys company  
+        """)
+
+    # Initialize chat history
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    # User input
+    user_query = st.chat_input("Ask your finance question...")
+
+    if user_query:
+        # Save user message
+        st.session_state.chat_history.append(("user", user_query))
+
+        # Get assistant response (NEW smart bot)
+        bot_reply = smart_finance_chatbot(user_query)
+
+        # Save bot message
+        st.session_state.chat_history.append(("bot", bot_reply))
+
+    # Display chat history
+    for role, message in st.session_state.chat_history:
+        if role == "user":
+            with st.chat_message("user"):
+                st.write(message)
+        else:
+            with st.chat_message("assistant"):
+                st.write(message)
 # ---- Footer ----
 st.markdown("---")
 st.caption("MarketMantra – combining technical analysis with machine learning for smarter trading decisions.")
