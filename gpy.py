@@ -1,5 +1,5 @@
 # =========================
-# IMPORTS (merged)
+# IMPORTS 
 # =========================
 import requests
 import numpy as np
@@ -28,10 +28,9 @@ if 'watchlist' not in st.session_state:
     st.session_state['watchlist'] = []
 
 # =========================
-# DATA FETCH (robust)
+# DATA FETCH 
 # =========================
-def get_stock_data(stock_symbol, start_date, end_date):
-    """Download stock data with error handling."""
+def get_stock_data(stock_symbol, start_date, end_date):  #Download stock data with error handling.
     try:
         df = yf.download(stock_symbol, start=start_date, end=end_date)
         if 'Adj Close' in df.columns:
@@ -191,51 +190,42 @@ def calculate_advanced_roi(ticker, start_date, investment):
     # ===== Benchmark =====
     bench_return = (bench_close.iloc[-1] - bench_close.iloc[0]) / bench_close.iloc[0] * 100
 
-    return {
-        "Final Value": float(final_value),
-        "Total Return %": float(total_return_pct),
-        "CAGR %": float(cagr),
-        "Volatility %": float(volatility),
-        "Sharpe Ratio": float(sharpe),
-        "Sensex Return %": float(bench_return)
-    }
+    return {"Final Value": float(final_value),
+            "Total Return %": float(total_return_pct),
+            "CAGR %": float(cagr),
+            "Volatility %": float(volatility),
+            "Sharpe Ratio": float(sharpe),
+            "Sensex Return %": float(bench_return)}
 
 # =========================
 # STREAMLIT UI
 # =========================
-# ---- Header with QR code ----
 qr_image = Image.open("Website qr.png")
 col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown('<h1 style="color: white; font-size: 29.7px;">MarketMantra - Stock Trend Predictor</h1>', unsafe_allow_html=True)
-    st.subheader("~ Developed By JEFF")
+    st.subheader("~ Developed By Jatan Shah")
 with col2:
     st.image(qr_image, caption="scan for website", width=100)
 
 # ---- Stock selection ----
 with st.expander("Select Stock And Data Range (Minimum 5 Days Gap)"):
-    st.header("Stock Selection")
-    stock_symbol = st.text_input("Select Stock Symbol", value="^BSESN").upper()
-    start_date = st.date_input("Start Date", pd.to_datetime("2024-01-01"))
-    end_date = st.date_input("End Date", datetime.now().date())
+     st.header("Stock Selection")
+     stock_symbol = st.text_input("Select Stock Symbol", value="^BSESN").upper()
+     start_date = st.date_input("Start Date", pd.to_datetime("2024-01-01"))
+     end_date = st.date_input("End Date", datetime.now().date())
 
 # ---- Indicator selection ----
 with st.expander("Select Technical Indicators"):
-    st.header("Technical Indicators")
-    indicator_options = [
-        "50-Day Simple Moving Average (SMA)",
-        "200-Day Simple Moving Average (SMA)",
-        "MACD (Moving Average Convergence Divergence)",
-        "Stochastic Oscillator",
-        "Bollinger Bands",
-        "(RSI) Relative Strength Index",
-        "Volume Chart"
-    ]
-    selected_indicators = st.multiselect(
-        "Select Technical Indicators to Display",
-        indicator_options,
-        default=["50-Day Simple Moving Average (SMA)", "200-Day Simple Moving Average (SMA)"]
-    )
+     st.header("Technical Indicators")
+     indicator_options = ["50-Day Simple Moving Average (SMA)",
+                          "200-Day Simple Moving Average (SMA)",
+                          "MACD (Moving Average Convergence Divergence)",
+                          "Stochastic Oscillator",
+                          "Bollinger Bands",
+                          "(RSI) Relative Strength Index",
+                          "Volume Chart"]
+    selected_indicators = st.multiselect("Select Technical Indicators to Display",indicator_options,default=["50-Day Simple Moving Average (SMA)", "200-Day Simple Moving Average (SMA)"] )
 
 # Flags for indicators
 sma_50 = "50-Day Simple Moving Average (SMA)" in selected_indicators
@@ -254,19 +244,19 @@ if df_raw.empty:
 
 # ---- Data Visualization ----
 with st.expander("Data Visualization"):
-    st.subheader(f"Stock Data for {stock_symbol}")
-    st.write(f"Historical data for {stock_symbol} from {start_date} to {end_date}, in its listed currency")
-    st.dataframe(df_raw.tail())
+     st.subheader(f"Stock Data for {stock_symbol}")
+     st.write(f"Historical data for {stock_symbol} from {start_date} to {end_date}, in its listed currency")
+     st.dataframe(df_raw.tail())
 
-    st.subheader("Closing Price Over Time")
-    fig, ax = plt.subplots(figsize=(15, 5))
-    ax.plot(df_raw['Close'], label='Close Price', color='blue')
-    ax.set_title(f"{stock_symbol} - Closing Price History", fontsize=15)
-    ax.set_ylabel('Price', fontsize=12)
-    ax.set_xlabel('Date', fontsize=12)
-    ax.grid(True)
-    plt.legend()
-    st.pyplot(fig)
+     st.subheader("Closing Price Over Time")
+     fig, ax = plt.subplots(figsize=(15, 5))
+     ax.plot(df_raw['Close'], label='Close Price', color='blue')
+     ax.set_title(f"{stock_symbol} - Closing Price History", fontsize=15)
+     ax.set_ylabel('Price', fontsize=12)
+     ax.set_xlabel('Date', fontsize=12)
+     ax.grid(True)
+     plt.legend()
+     st.pyplot(fig)
 
 # ---- Portfolio & Watchlist buttons ----
 st.header("Portfolio & Watchlist")
@@ -468,47 +458,48 @@ with tab4:
 with tab5: #ROI CALC
     st.subheader("Advanced Investment Analytics")
 
-    roi_start_date = st.date_input(
-        "Investment Start Date",
-        pd.to_datetime("2016-01-01"),
-        key="roi_start"
-    )
+roi_start_date = st.date_input(
+    "Investment Start Date",
+    pd.to_datetime("2016-01-01"),
+    key="roi_start"
+)
 
-    investment_amount = st.number_input(
-        "Investment Amount (₹)",
-        min_value=1000,
-        value=100000,
-        step=1000
-    )
+investment_amount = st.number_input(
+    "Investment Amount (₹)",
+    min_value=1000,
+    value=100000,
+    step=1000
+)
 
-    if st.button("Calculate Advanced ROI"):
-        result = calculate_advanced_roi(stock_symbol, roi_start_date, investment_amount)
+if st.button("Calculate Advanced ROI"):
+    result = calculate_advanced_roi(stock_symbol, roi_start_date, investment_amount)
 
-        if result:
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Final Value", f"₹{result['Final Value']:,.0f}")
-            col2.metric("Total Return", f"{result['Total Return %']:.2f}%")
-            col3.metric("CAGR", f"{result['CAGR %']:.2f}%")
+    if result:
+        # ---- Metrics Row 1 ----
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Final Value", f"₹{result['Final Value']:,.0f}")
+        col2.metric("Total Return", f"{result['Total Return %']:.2f}%")
+        col3.metric("CAGR", f"{result['CAGR %']:.2f}%")
 
-            col4, col5, col6 = st.columns(3)
-            col4.metric("Volatility", f"{result['Volatility %']:.2f}%")
-            col5.metric("Sharpe Ratio", f"{result['Sharpe Ratio']:.2f}")
-            col6.metric("Sensex Return", f"{result['Sensex Return %']:.2f}%")
+        # ---- Metrics Row 2 ----
+        col4, col5 = st.columns(2)
+        col4.metric("Volatility", f"{result['Volatility %']:.2f}%")
+        col5.metric("Sharpe Ratio", f"{result['Sharpe Ratio']:.2f}")
 
-            # Compare vs benchmark chart
-            st.subheader("Stock vs Sensex Performance")
+        # ---- Stock Growth Chart ----
+        st.subheader("Investment Growth Over Time")
 
-            stock_df = yf.download(stock_symbol, start=roi_start_date)
-            sensex_df = yf.download("^BSESN", start=roi_start_date)
+        stock_df = yf.download(stock_symbol, start=roi_start_date)
 
-            stock_norm = stock_df['Close'] / stock_df['Close'].iloc[0]
-            sensex_norm = sensex_df['Close'] / sensex_df['Close'].iloc[0]
+        normalized_price = stock_df['Close'] / stock_df['Close'].iloc[0]
+        investment_growth = normalized_price * investment_amount
 
-            fig, ax = plt.subplots(figsize=(12,5))
-            ax.plot(stock_norm, label=stock_symbol)
-            ax.plot(sensex_norm, label="Sensex")
-            ax.legend()
-            st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(12,5))
+        ax.plot(investment_growth, label=f"{stock_symbol} Investment Value")
+        ax.set_ylabel("Portfolio Value (₹)")
+        ax.legend()
+
+        st.pyplot(fig)
 
 # ---- Footer ----
 st.markdown("---")
