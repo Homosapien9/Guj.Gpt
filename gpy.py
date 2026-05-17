@@ -137,148 +137,7 @@ def add_features(df):
     df['Target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
     df.dropna(inplace=True)
     return df
-
-# =========================
-# GOOGLE SEARCH FALLBACK
-# =========================
-def google_search_answer(query):
-    try:
-        for url in search(query, num_results=3):
-            res = requests.get(url, timeout=5)
-            soup = BeautifulSoup(res.text, "html.parser")
-            paragraphs = soup.find_all('p')
-            text = " ".join([p.get_text() for p in paragraphs[:5]])
-            if len(text) > 200:
-                return text[:500] + "..."
-        return "No useful results found."
-    except Exception as e:
-        return f"Error: {e}"
-
-# =========================
-# CHATBOT HELPER (Information Hub)
-# =========================
-def get_stock_price(stock_symbol):
-    """Fetch current price from Yahoo Finance API."""
-    try:
-        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={stock_symbol}"
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-        if 'quoteResponse' in data and 'result' in data['quoteResponse'] and len(data['quoteResponse']['result']) > 0:
-            stock_data = data['quoteResponse']['result'][0]
-            return stock_data['regularMarketPrice']
-        return None
-    except Exception:
-        return None
-
-def get_investment_info(query):
-    """Answer investment questions using predefined dictionary or Google fallback."""
-    query = query.lower()
-
-    # Price / compare queries
-    if 'price' in query:
-        words = query.split()
-        for word in words:
-            if '.' in word:  # likely a symbol
-                price = get_stock_price(word.upper())
-                if price is not None:
-                    return f"The current price of {word.upper()} is {price} USD."
-                else:
-                    return f"Sorry, I couldn't find the stock price for {word.upper()}. Please check the symbol."
-
-    if 'compare' in query:
-        parts = query.split("compare")[1].split("and")
-        symbols = [s.strip().upper() for s in parts if s.strip()]
-        result = {}
-        for sym in symbols:
-            price = get_stock_price(sym)
-            result[sym] = f"{price} USD" if price else "Not found"
-        return result
-
-    # Predefined financial terms
-    investment_terms = {
-        "what is bond": "A bond is when you lend money to someone, like the government or a company, and they pay you back with interest after a while.",
-        "what is stock market": "The stock market is where people buy and sell pieces of companies, called stocks.",
-        "what is mutual fund": "A mutual fund is a pool of money collected from many investors, managed by professionals to invest in different assets like stocks and bonds.",
-        "what is roi": "ROI means Return on Investment. It's a way to measure how much profit you made relative to the cost of your investment.",
-        "what is diversification": "Diversification means spreading your investments across different areas to reduce risk. Don't put all your eggs in one basket.",
-        "what is portfolio management": "Portfolio management is the art of choosing and managing the best mix of investments to achieve your financial goals.",
-        "what is etf": "An ETF, or exchange-traded fund, is like a mutual fund, but it trades on the stock exchange like a regular stock.",
-        "what is cryptocurrency": "Cryptocurrency is a type of digital or virtual currency that uses encryption techniques to regulate the generation of units and verify the transfer of funds.",
-        "what is bitcoin": "Bitcoin is the first and most popular cryptocurrency. It's decentralized and uses blockchain technology for secure transactions.",
-        "what is inflation": "Inflation is the rate at which the general level of prices for goods and services rises, and subsequently, the purchasing power of currency falls.",
-        "what is interest rate": "An interest rate is the cost of borrowing money, typically expressed as a percentage of the principal loan amount, paid periodically.",
-        "what is asset": "An asset is something of value or a resource that can provide future economic benefits, like property, stocks, or bonds.",
-        "what is hedge fund": "A hedge fund is a pooled investment fund that uses a range of strategies to earn high returns for its investors, often with high risk.",
-        "what is ipo": "An IPO, or Initial Public Offering, is when a company offers its shares to the public for the first time, usually to raise capital.",
-        "what is commodity": "A commodity is a basic good used in commerce that is interchangeable with other goods of the same type, like gold, oil, or wheat.",
-        "what is real estate investment": "Real estate investment involves buying, owning, managing, and/or renting property for profit. It can generate regular income or long-term gains.",
-        "what is savings account": "A savings account is a bank account that earns interest on your deposits, typically used for short-term or emergency savings.",
-        "what is 401k": "A 401(k) is a retirement savings plan offered by employers that allows workers to save and invest a portion of their paycheck before taxes.",
-        "what is dividend": "A dividend is a payment made by a corporation to its shareholders, usually out of profits, in the form of cash or additional shares.",
-        "what is stock split": "A stock split occurs when a company issues additional shares to shareholders, increasing the total supply while keeping the overall value the same.",
-        "what is bear market": "A bear market is a period when the prices of securities are falling or are expected to fall, typically by 20% or more from recent highs.",
-        "what is bull market": "A bull market is when the prices of securities are rising or are expected to rise, often driven by investor confidence and economic growth.",
-        "what is private equity": "Private equity is capital invested in companies that are not listed on a public exchange. It's often used for startup financing or buyouts.",
-        "what is credit rating": "A credit rating is an evaluation of the creditworthiness of a borrower, based on their financial history and ability to repay debt.",
-        "what is stock exchange": "A stock exchange is a marketplace where stocks, bonds, and other securities are bought and sold. The New York Stock Exchange (NYSE) is one example.",
-        "what is capital gains": "Capital gains are the profits made from the sale of an asset or investment, such as stocks or property, for more than its purchase price.",
-        "what is market capitalization": "Market capitalization (market cap) is the total market value of a company's outstanding shares, calculated by multiplying the stock price by the number of shares.",
-        "what is venture capital": "Venture capital is financing provided to early-stage, high-growth companies that have the potential to grow rapidly and generate high returns.",
-        "what is leveraged buyout": "A leveraged buyout (LBO) is a financial transaction where a company is purchased using a combination of equity and borrowed money.",
-        "what is an index fund": "An index fund is a type of mutual fund or ETF designed to replicate the performance of a specific market index, like the S&P 500.",
-        "what is sensex": "Sensex, or the S&P BSE Sensex, is the stock market index of the Bombay Stock Exchange (BSE) in India, tracking 30 large, financially stable companies across various sectors to represent the overall market performance.",
-        "what is capital": "Capital refers to money or assets used to generate income or invest in projects or businesses.",
-        "what is bear market rally": "A bear market rally is a short-term recovery in stock prices during a longer-term bear market, which often ends in a downturn.",
-        "what is leverage": "Leverage involves borrowing money to increase the potential return on an investment, but it also increases the risk of loss.",
-        "what is margin trading": "Margin trading is borrowing money from a broker to trade financial assets, allowing you to buy more than you could with your own funds.",
-        "what is short selling": "Short selling is selling a security you do not own, hoping to buy it back at a lower price to make a profit.",
-        "what is bond yield": "Bond yield is the return an investor can expect to earn on a bond, often expressed as an annual percentage rate.",
-        "what is debt-to-equity ratio": "The debt-to-equity ratio is a financial ratio that compares a company's total debt to its shareholder equity, indicating financial leverage.",
-        "what is credit default swap": "A credit default swap (CDS) is a financial derivative contract that allows investors to hedge or speculate on the credit risk of a company or government.",
-        "what is sovereign debt": "Sovereign debt is the money borrowed by a country's government, typically through the issuance of bonds.",
-        "what is quantitative easing": "Quantitative easing is a form of monetary policy in which a central bank buys government securities to increase the money supply and stimulate the economy.",
-        "what is financial derivative": "A financial derivative is a contract whose value is based on the price of an underlying asset, like options, futures, or swaps.",
-        "what is yield curve": "The yield curve is a graph that plots the interest rates of bonds with different maturity dates, often used to gauge economic conditions.",
-        "what is cost of capital": "The cost of capital is the rate of return required by investors for providing capital to a business, used in investment decision-making.",
-        "what is private placement": "Private placement is the sale of securities to a small group of institutional or accredited investors, rather than the public market.",
-        "what is an annuity": "An annuity is a financial product that provides a series of fixed payments over time, often used for retirement income.",
-        "what is income statement": "An income statement is a financial document that shows a company’s revenues, expenses, and profits over a specific period.",
-        "what is balance sheet": "A balance sheet is a financial statement that lists a company's assets, liabilities, and equity, providing a snapshot of its financial position.",
-        "what is dividend yield": "Dividend yield is a financial ratio that shows how much cash a company pays out in dividends relative to its stock price.",
-        "what is insider trading": "Insider trading refers to buying or selling a security based on non-public, material information about the company.",
-        "what is credit risk": "Credit risk is the risk that a borrower will default on a loan or bond, causing the lender to lose part or all of the investment.",
-        "what is financial leverage": "Financial leverage is the use of borrowed funds to amplify the potential return on an investment, but it increases the risk of loss.",
-        "what is risk tolerance": "Risk tolerance refers to the level of risk an investor is willing to take in their investment decisions, based on their financial situation and goals.",
-        "what is market efficiency": "Market efficiency is the degree to which market prices reflect all available information. A perfectly efficient market would reflect all known data immediately.",
-        "what is diversification strategy": "Diversification strategy involves investing in a variety of assets or asset classes to reduce overall investment risk.",
-        "what is roth ira": "A Roth IRA is a retirement account that allows your investments to grow tax-free, and withdrawals are also tax-free in retirement if certain conditions are met.",
-        "what is traditional ira": "A Traditional IRA is a retirement account where contributions may be tax-deductible, but withdrawals are taxed as income during retirement.",
-        "what is expense ratio": "The expense ratio is the annual fee that mutual funds or ETFs charge to manage an investment portfolio, expressed as a percentage of assets under management.",
-        "what is stop-loss order": "A stop-loss order is an order placed with a broker to buy or sell once a stock reaches a certain price, used to limit losses or lock in profits.",
-        "what is price-to-earnings ratio": "The price-to-earnings (P/E) ratio is a valuation ratio, calculated by dividing the stock price by the earnings per share (EPS), indicating if a stock is over or under-valued.",
-        "what is bear trap": "A bear trap occurs when a security's price briefly drops, luring short-sellers, only for the price to reverse and rise, leading to losses for those betting on a decline.",
-        "what is bull trap": "A bull trap happens when a security’s price rises, attracting buyers, only for the price to reverse and fall, causing losses for investors who bought in.",
-        "what is exchange rate": "The exchange rate is the value of one currency in terms of another, affecting international trade and investments.",
-        "what is a credit line": "A credit line is a pre-approved loan limit provided by a lender to a borrower, which can be drawn upon as needed, typically for short-term needs.",
-        "what is debt servicing": "Debt servicing refers to the payments made towards the interest and principal of debt obligations, such as loans or bonds.",
-        "what is economic moat": "An economic moat refers to a company’s ability to maintain a competitive advantage and protect itself from the competition, resulting in long-term profitability.",
-        "what is blue chip stock": "Blue chip stocks are shares in well-established, financially stable companies known for their reliability and consistent performance.",
-        "what is market volatility": "Market volatility refers to the extent of price fluctuations in a market, often indicating uncertainty or risk, and can be measured using the VIX index.",
-        "what is stock buyback": "A stock buyback occurs when a company repurchases its own shares from the market, reducing the number of outstanding shares and potentially increasing the stock price.",
-        "what is wealth management": "Wealth management is a comprehensive financial service that involves managing an individual's or family's investments, estate, tax, and retirement planning.",
-        "what is financial advisor": "A financial advisor is a professional who provides advice on investments, insurance, retirement planning, and other financial matters to individuals or businesses.",
-        "what is dollar-cost averaging": "Dollar-cost averaging is an investment strategy where you invest a fixed amount regularly, regardless of market conditions, reducing the impact of volatility.",
-        "what is real estate investment trust": "A real estate investment trust (REIT) is a company that owns, operates, or finances real estate properties, allowing investors to pool capital and earn returns through dividends."
-    }
-
-    for term, answer in investment_terms.items():
-        if term in query:
-            return answer
-
-    # Fallback to Google search
-    return google_search_answer(query)
-
+    
 # =========================
 # ROI CALCULATOR
 # =========================
@@ -608,8 +467,7 @@ with tab4:
         else:
             st.error(f"DOWN ({(1-final_up_prob)*100:.2f}% probability)")
 
-# ---------- Tab 5: ROI Calculator ----------
-with tab5:
+with tab5: #ROI CALC
     st.subheader("Advanced Investment Analytics")
 
     roi_start_date = st.date_input(
@@ -654,48 +512,6 @@ with tab5:
             ax.legend()
             st.pyplot(fig)
 
-# ---------- Tab 6: AI Financial Assistant ----------
-with tab6:
-    st.subheader("AI Financial Assistant 🤖")
-    smart_finance_chatbot = get_investment_info
-    st.write("Ask about stocks, news, company research, market mood, or investing tips.")
-
-    # Suggested prompts
-    with st.expander("💡 Try asking"):
-        st.write("""
-        • Price of TCS  
-        • TCS news  
-        • Market mood today  
-        • Should I buy Reliance?  
-        • Compare AAPL and MSFT  
-        • Tell me about Infosys company  
-        """)
-
-    # Initialize chat history
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-
-    # User input
-    user_query = st.chat_input("Ask your finance question...")
-
-    if user_query:
-        # Save user message
-        st.session_state.chat_history.append(("user", user_query))
-
-        # Get assistant response (NEW smart bot)
-        bot_reply = smart_finance_chatbot(user_query)
-
-        # Save bot message
-        st.session_state.chat_history.append(("bot", bot_reply))
-
-    # Display chat history
-    for role, message in st.session_state.chat_history:
-        if role == "user":
-            with st.chat_message("user"):
-                st.write(message)
-        else:
-            with st.chat_message("assistant"):
-                st.write(message)
 # ---- Footer ----
 st.markdown("---")
 st.caption("MarketMantra – combining technical analysis with machine learning for smarter trading decisions.")
