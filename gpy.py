@@ -289,37 +289,47 @@ def calculate_advanced_roi(ticker, start_date, investment):
     if df.empty or benchmark.empty:
         return None
 
-    # ⭐ FIX 1 — force Close to be a Series (handles new yfinance format)
-    if isinstance(df.columns, pd.MultiIndex):
-        df = df['Close'].to_frame()
-        benchmark = benchmark['Close'].to_frame()
+    # 🔥 UNIVERSAL CLOSE PRICE EXTRACTOR
+    def get_close_series(data):
+        close = data['Close']
 
-    close_prices = df['Close'].dropna()
-    bench_close = benchmark['Close'].dropna()
+        # Case 1: already Series → OK
+        if isinstance(close, pd.Series):
+            return close.dropna()
 
-    # ⭐ FIX 2 — extract floats safely
+        # Case 2: DataFrame with 1 column → squeeze to Series
+        if isinstance(close, pd.DataFrame):
+            return close.squeeze().dropna()
+
+        # fallback safety
+        return pd.Series(close).dropna()
+
+    close_prices = get_close_series(df)
+    bench_close = get_close_series(benchmark)
+
+    # Convert to floats safely
     start_price = float(close_prices.iloc[0])
     current_price = float(close_prices.iloc[-1])
 
-    # Basic ROI
+    # ===== ROI =====
     shares = investment / start_price
     final_value = shares * current_price
     total_return_pct = (final_value - investment) / investment * 100
 
-    # CAGR
+    # ===== CAGR =====
     days = (close_prices.index[-1] - close_prices.index[0]).days
     years = days / 365
     cagr = ((final_value / investment) ** (1 / years) - 1) * 100
 
-    # Volatility
+    # ===== Volatility =====
     returns = close_prices.pct_change().dropna()
     volatility = returns.std() * np.sqrt(252) * 100
 
-    # Sharpe ratio
+    # ===== Sharpe =====
     risk_free_rate = 0.06
     sharpe = (cagr/100 - risk_free_rate) / (volatility/100)
 
-    # Benchmark comparison
+    # ===== Benchmark =====
     bench_return = (bench_close.iloc[-1] - bench_close.iloc[0]) / bench_close.iloc[0] * 100
 
     return {
