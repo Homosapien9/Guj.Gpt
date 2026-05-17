@@ -283,14 +283,23 @@ def get_investment_info(query):
 # ROI CALCULATOR
 # =========================
 def calculate_advanced_roi(ticker, start_date, investment):
-    df = yf.download(ticker, start=start_date)
-    benchmark = yf.download("^BSESN", start=start_date)  # Sensex benchmark
-    
-    if df.empty:
+    df = yf.download(ticker, start=start_date, auto_adjust=True)
+    benchmark = yf.download("^BSESN", start=start_date, auto_adjust=True)
+
+    if df.empty or benchmark.empty:
         return None
 
-    start_price = df['Close'].iloc[0]
-    current_price = df['Close'].iloc[-1]
+    # ⭐ FIX 1 — force Close to be a Series (handles new yfinance format)
+    if isinstance(df.columns, pd.MultiIndex):
+        df = df['Close'].to_frame()
+        benchmark = benchmark['Close'].to_frame()
+
+    close_prices = df['Close'].dropna()
+    bench_close = benchmark['Close'].dropna()
+
+    # ⭐ FIX 2 — extract floats safely
+    start_price = float(close_prices.iloc[0])
+    current_price = float(close_prices.iloc[-1])
 
     # Basic ROI
     shares = investment / start_price
@@ -298,28 +307,28 @@ def calculate_advanced_roi(ticker, start_date, investment):
     total_return_pct = (final_value - investment) / investment * 100
 
     # CAGR
-    days = (df.index[-1] - df.index[0]).days
+    days = (close_prices.index[-1] - close_prices.index[0]).days
     years = days / 365
-    cagr = ((final_value / investment) ** (1/years) - 1) * 100
+    cagr = ((final_value / investment) ** (1 / years) - 1) * 100
 
     # Volatility
-    returns = df['Close'].pct_change().dropna()
+    returns = close_prices.pct_change().dropna()
     volatility = returns.std() * np.sqrt(252) * 100
 
     # Sharpe ratio
-    risk_free_rate = 0.06  # 6% India avg
+    risk_free_rate = 0.06
     sharpe = (cagr/100 - risk_free_rate) / (volatility/100)
 
     # Benchmark comparison
-    bench_return = (benchmark['Close'].iloc[-1] - benchmark['Close'].iloc[0]) / benchmark['Close'].iloc[0] * 100
+    bench_return = (bench_close.iloc[-1] - bench_close.iloc[0]) / bench_close.iloc[0] * 100
 
     return {
-        "Final Value": final_value,
-        "Total Return %": total_return_pct,
-        "CAGR %": cagr,
-        "Volatility %": volatility,
-        "Sharpe Ratio": sharpe,
-        "Sensex Return %": bench_return
+        "Final Value": float(final_value),
+        "Total Return %": float(total_return_pct),
+        "CAGR %": float(cagr),
+        "Volatility %": float(volatility),
+        "Sharpe Ratio": float(sharpe),
+        "Sensex Return %": float(bench_return)
     }
 
 # =========================
