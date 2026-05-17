@@ -657,7 +657,7 @@ with tab5:
 # ---------- Tab 6: AI Financial Assistant ----------
 with tab6:
     st.subheader("AI Financial Assistant 🤖")
-
+    smart_finance_chatbot = get_investment_info
     st.write("Ask about stocks, news, company research, market mood, or investing tips.")
 
     # Suggested prompts
