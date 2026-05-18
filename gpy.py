@@ -632,4 +632,4 @@ with tab5: #ROI CALC
 
 # ---- Footer ----
 st.markdown("---")
-st.caption("MarketMantra – combining technical analysis with machine learning for smarter trading decisions.")ons.")
+st.caption("MarketMantra – combining technical analysis with machine learning for smarter trading decisions.")
