@@ -1,6 +1,7 @@
 # =========================
 # IMPORTS 
 # =========================
+import requests
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -9,48 +10,13 @@ import streamlit as st
 from datetime import datetime
 import matplotlib.pyplot as plt
 from PIL import Image
+from bs4 import BeautifulSoup
+from googlesearch import search
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import TimeSeriesSplit
+from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
-import copy
-
-# =========================
-# MODEL DEFINITIONS (global)
-# =========================
-MODELS = {
-    "Random Forest": RandomForestClassifier(
-        n_estimators=500,
-        max_depth=6,
-        min_samples_leaf=20,
-        max_features='sqrt',
-        class_weight='balanced',
-        random_state=50,
-        n_jobs=-1
-    ),
-    "Gradient Boosting": GradientBoostingClassifier(
-        n_estimators=200,
-        learning_rate=0.05,
-        max_depth=5,
-        random_state=50
-    ),
-    "XGBoost": xgb.XGBClassifier(
-        n_estimators=300,
-        max_depth=4,
-        learning_rate=0.03,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        min_child_weight=10,
-        eval_metric='logloss',
-        random_state=50
-    ),
-    "Decision Tree": DecisionTreeClassifier(
-        max_depth=6,
-        class_weight='balanced',
-        random_state=50
-    )
-}
 
 # =========================
 # SESSION STATE
@@ -62,28 +28,17 @@ if 'watchlist' not in st.session_state:
     st.session_state['watchlist'] = []
 
 # =========================
-# DATA FETCH (cached)
+# DATA FETCH 
 # =========================
-@st.cache_data(ttl=300)
-def get_stock_data(stock_symbol, start_date, end_date):
-    """Download stock data with error handling (5-min cache)."""
+def get_stock_data(stock_symbol, start_date, end_date):  #Download stock data with error handling.
     try:
-        df = yf.download(stock_symbol, start=start_date, end=end_date, auto_adjust=True)
+        df = yf.download(stock_symbol, start=start_date, end=end_date)
         if 'Adj Close' in df.columns:
             df.drop(columns=['Adj Close'], inplace=True)
         return df
     except Exception as e:
         st.error(f"Error fetching stock data: {e}")
         return pd.DataFrame()
-
-# Safe close price extractor for yfinance multi-level columns
-def get_close_series(data):
-    close = data['Close']
-    if isinstance(close, pd.Series):
-        return close.dropna()
-    if isinstance(close, pd.DataFrame):
-        return close.squeeze().dropna()
-    return pd.Series(close).dropna()
 
 # =========================
 # INDICATOR FUNCTIONS
@@ -164,37 +119,7 @@ def plot_volumetric_chart(df):
     st.pyplot(fig)
 
 # =========================
-# SIGNAL SUMMARY CARD
-# =========================
-def get_signal_summary(df):
-    signals = {}
-    # RSI
-    rsi_val = compute_rsi(df).iloc[-1]
-    signals['RSI'] = 'Buy' if rsi_val < 30 else ('Sell' if rsi_val > 70 else 'Neutral')
-    # MACD
-    macd_line, signal_line = compute_macd(df)
-    signals['MACD'] = 'Buy' if macd_line.iloc[-1] > signal_line.iloc[-1] else 'Sell'
-    # Bollinger Bands
-    bb = compute_bollinger_bands(df)
-    price = df['Close'].iloc[-1]
-    signals['Bollinger'] = 'Buy' if price < bb['Lower_BB'].iloc[-1] else \
-                           ('Sell' if price > bb['Upper_BB'].iloc[-1] else 'Neutral')
-    # Stochastic
-    stoch_val = compute_stochastic(df).iloc[-1]
-    signals['Stoch'] = 'Buy' if stoch_val < 20 else ('Sell' if stoch_val > 80 else 'Neutral')
-
-    buys = sum(1 for v in signals.values() if v == 'Buy')
-    sells = sum(1 for v in signals.values() if v == 'Sell')
-    if buys >= 3:
-        overall = 'BULLISH 🟢'
-    elif sells >= 3:
-        overall = 'BEARISH 🔴'
-    else:
-        overall = 'NEUTRAL 🟡'
-    return signals, overall
-
-# =========================
-# FEATURE ENGINEERING
+# FEATURE ENGINEERING (for ML)
 # =========================
 def add_features(df):
     """Add technical features and target for the model (ML‑ready)."""
@@ -215,12 +140,12 @@ def add_features(df):
     loss  = (-delta.where(delta < 0, 0.0)).rolling(14).mean()
     df['RSI'] = 100 - (100 / (1 + gain / loss))
 
-    # MACD gap
+    # MACD signal gap
     macd   = df['Close'].ewm(span=12).mean() - df['Close'].ewm(span=26).mean()
     signal = macd.ewm(span=9).mean()
     df['MACD_gap'] = macd - signal
 
-    # Bollinger Band position
+    # Bollinger Band position (0 = lower band, 1 = upper band)
     mid = df['Close'].rolling(20).mean()
     std = df['Close'].rolling(20).std()
     df['BB_position'] = (df['Close'] - (mid - 2*std)) / (4 * std)
@@ -230,7 +155,7 @@ def add_features(df):
     high14 = df['High'].rolling(14).max()
     df['Stoch'] = 100 * (df['Close'] - low14) / (high14 - low14)
 
-    # SMA crossover
+    # SMA crossover signal
     df['SMA_cross'] = df['SMA_10'] - df['SMA_50']
 
     df['Target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
@@ -241,42 +166,61 @@ def add_features(df):
 # ROI CALCULATOR
 # =========================
 def calculate_advanced_roi(ticker, start_date, investment):
-    df = get_stock_data(ticker, start_date, datetime.now().date().strftime('%Y-%m-%d'))
-    benchmark = get_stock_data("^BSESN", start_date, datetime.now().date().strftime('%Y-%m-%d'))
+    df = yf.download(ticker, start=start_date, auto_adjust=True)
+    benchmark = yf.download("^BSESN", start=start_date, auto_adjust=True)
 
     if df.empty or benchmark.empty:
         return None
 
+    # 🔥 UNIVERSAL CLOSE PRICE EXTRACTOR
+    def get_close_series(data):
+        close = data['Close']
+
+        # Case 1: already Series → OK
+        if isinstance(close, pd.Series):
+            return close.dropna()
+
+        # Case 2: DataFrame with 1 column → squeeze to Series
+        if isinstance(close, pd.DataFrame):
+            return close.squeeze().dropna()
+
+        # fallback safety
+        return pd.Series(close).dropna()
+
     close_prices = get_close_series(df)
     bench_close = get_close_series(benchmark)
 
+    # Convert to floats safely
     start_price = float(close_prices.iloc[0])
     current_price = float(close_prices.iloc[-1])
 
+    # ===== ROI =====
     shares = investment / start_price
     final_value = shares * current_price
     total_return_pct = (final_value - investment) / investment * 100
 
+    # ===== CAGR =====
     days = (close_prices.index[-1] - close_prices.index[0]).days
     years = days / 365
     cagr = ((final_value / investment) ** (1 / years) - 1) * 100
 
+    # ===== Volatility =====
     returns = close_prices.pct_change().dropna()
     volatility = returns.std() * np.sqrt(252) * 100
 
+    # ===== Sharpe =====
     risk_free_rate = 0.06
     sharpe = (cagr/100 - risk_free_rate) / (volatility/100)
 
+    # ===== Benchmark =====
     bench_return = (bench_close.iloc[-1] - bench_close.iloc[0]) / bench_close.iloc[0] * 100
 
-    return {
-        "Final Value": float(final_value),
-        "Total Return %": float(total_return_pct),
-        "CAGR %": float(cagr),
-        "Volatility %": float(volatility),
-        "Sharpe Ratio": float(sharpe),
-        "Sensex Return %": float(bench_return)
-    }
+    return {"Final Value": float(final_value),
+            "Total Return %": float(total_return_pct),
+            "CAGR %": float(cagr),
+            "Volatility %": float(volatility),
+            "Sharpe Ratio": float(sharpe),
+            "Sensex Return %": float(bench_return)}
 
 # =========================
 # STREAMLIT UI
@@ -289,14 +233,17 @@ with col1:
 with col2:
     st.image(qr_image, caption="scan for website", width=100)
 
+# ---- Stock selection ----
 with st.expander("Select Stock And Data Range (Minimum 5 Days Gap)"):
-    st.header("Stock Selection")
-    stock_symbol = st.text_input("Select Stock Symbol", value="^BSESN").upper()
-    start_date = st.date_input("Start Date", pd.to_datetime("2024-01-01"))
-    end_date = st.date_input("End Date", datetime.now().date())
+     st.header("Stock Selection")
+     stock_symbol = st.text_input("Select Stock Symbol", value="^BSESN").upper()
+     start_date = st.date_input("Start Date", pd.to_datetime("2024-01-01"))
+     end_date = st.date_input("End Date", datetime.now().date())
 
+# ---- Indicator selection ----
 with st.expander("Select Technical Indicators"):
     st.header("Technical Indicators")
+
     indicator_options = [
         "50-Day Simple Moving Average (SMA)",
         "200-Day Simple Moving Average (SMA)",
@@ -306,13 +253,16 @@ with st.expander("Select Technical Indicators"):
         "Relative Strength Index (RSI)",
         "Volume Chart"
     ]
+
     selected_indicators = st.multiselect(
         "Select Technical Indicators to Display",
         indicator_options,
-        default=["50-Day Simple Moving Average (SMA)",
-                 "200-Day Simple Moving Average (SMA)"]
+        default=[
+            "50-Day Simple Moving Average (SMA)",
+            "200-Day Simple Moving Average (SMA)"
+        ]
     )
-
+# Flags for indicators
 sma_50 = "50-Day Simple Moving Average (SMA)" in selected_indicators
 sma_200 = "200-Day Simple Moving Average (SMA)" in selected_indicators
 macd_ind = "MACD (Moving Average Convergence Divergence)" in selected_indicators
@@ -321,7 +271,7 @@ bollinger_ind = "Bollinger Bands" in selected_indicators
 rsi_ind = "Relative Strength Index (RSI)" in selected_indicators
 volume_ind = "Volume Chart" in selected_indicators
 
-# ---- Fetch data ----
+# ---- Fetch raw data ----
 df_raw = get_stock_data(stock_symbol, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
 if df_raw.empty:
     st.warning("No data found for the selected stock or date range. Model needs at least 5 days to predict results.")
@@ -329,19 +279,19 @@ if df_raw.empty:
 
 # ---- Data Visualization ----
 with st.expander("Data Visualization"):
-    st.subheader(f"Stock Data for {stock_symbol}")
-    st.write(f"Historical data for {stock_symbol} from {start_date} to {end_date}, in its listed currency")
-    st.dataframe(df_raw.tail())
+     st.subheader(f"Stock Data for {stock_symbol}")
+     st.write(f"Historical data for {stock_symbol} from {start_date} to {end_date}, in its listed currency")
+     st.dataframe(df_raw.tail())
 
-    st.subheader("Closing Price Over Time")
-    fig, ax = plt.subplots(figsize=(15, 5))
-    ax.plot(df_raw['Close'], label='Close Price', color='blue')
-    ax.set_title(f"{stock_symbol} - Closing Price History", fontsize=15)
-    ax.set_ylabel('Price', fontsize=12)
-    ax.set_xlabel('Date', fontsize=12)
-    ax.grid(True)
-    plt.legend()
-    st.pyplot(fig)
+     st.subheader("Closing Price Over Time")
+     fig, ax = plt.subplots(figsize=(15, 5))
+     ax.plot(df_raw['Close'], label='Close Price', color='blue')
+     ax.set_title(f"{stock_symbol} - Closing Price History", fontsize=15)
+     ax.set_ylabel('Price', fontsize=12)
+     ax.set_xlabel('Date', fontsize=12)
+     ax.grid(True)
+     plt.legend()
+     st.pyplot(fig)
 
 # ---- Portfolio & Watchlist buttons ----
 st.header("Portfolio & Watchlist")
@@ -366,7 +316,7 @@ if watchlist_add:
         st.warning(f"{stock_symbol} is already in your Watchlist.")
 
 # ---- Feature engineering for ML ----
-df_ml = add_features(df_raw)
+df_ml = add_features(df_raw)  # adds all new features + target, drops NA
 
 # ---- Tabs ----
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Portfolio", "Watchlist", "Technical Indicators", "Predictions", "Calculate ROI"])
@@ -404,41 +354,14 @@ with tab2:
 # ---------- Tab 3: Technical Indicators ----------
 with tab3:
     st.subheader("Technical Indicators")
-    # Signal summary card
-    signals, overall = get_signal_summary(df_raw)
-    st.subheader(f"Overall Signal: {overall}")
-    cols = st.columns(4)
-    for i, (ind, sig) in enumerate(signals.items()):
-        color = 'green' if sig == 'Buy' else ('red' if sig == 'Sell' else 'orange')
-        cols[i].markdown(f"**{ind}** \n:{color}[{sig}]")
-
-    # Trend regime
-    sma50_vals = df_raw['Close'].rolling(50).mean()
-    sma200_vals = df_raw['Close'].rolling(200).mean()
-    sma50_val = sma50_vals.iloc[-1]
-    sma200_val = sma200_vals.iloc[-1]
-    curr_price = float(df_raw['Close'].iloc[-1])
-    if curr_price > sma50_val and curr_price > sma200_val:
-        regime = "📈 UPTREND — price above both SMA-50 and SMA-200"
-        regime_color = "success"
-    elif curr_price < sma50_val and curr_price < sma200_val:
-        regime = "📉 DOWNTREND — price below both SMA-50 and SMA-200"
-        regime_color = "error"
-    else:
-        regime = "↔️ SIDEWAYS — mixed signals from SMA-50 and SMA-200"
-        regime_color = "warning"
-    getattr(st, regime_color)(f"Current regime: {regime}")
-
     if sma_50:
         st.header("Simple Moving Average (SMA) of 50 Days")
         st.write("The **50-day** SMA looks at the average price over the last 50 days (last 50 days shown).")
-        # Work on a copy to avoid mutating df_raw
-        df_plot = df_raw.copy()
-        df_plot['SMA_50'] = df_plot['Close'].rolling(window=50).mean()
-        sma50_plot = df_plot['SMA_50'].dropna().iloc[-50:]
+        df_raw['SMA_50'] = df_raw['Close'].rolling(window=50).mean()
+        # Plot only the last 50 days where SMA is defined
+        sma50_plot = df_raw['SMA_50'].dropna().iloc[-50:]  # last 50 valid points
         fig, ax = plt.subplots(figsize=(15, 5))
-        ax.plot(df_plot['Close'], label='Close Price', color='blue', alpha=0.4)
-        ax.plot(sma50_plot, label="50-Day SMA", color='orange')
+        ax.plot(sma50_plot.index, sma50_plot, label="50-Day SMA", color='orange')
         ax.set_title(f"{stock_symbol} - 50-Day Simple Moving Average", fontsize=15)
         ax.set_ylabel('Price', fontsize=12)
         ax.set_xlabel('Date', fontsize=12)
@@ -448,12 +371,10 @@ with tab3:
     if sma_200:
         st.header("Simple Moving Average (SMA) of 200 Days")
         st.write("The **200-day** SMA looks at the average price over the last 200 days (last 200 days shown).")
-        df_plot = df_raw.copy()
-        df_plot['SMA_200'] = df_plot['Close'].rolling(window=200).mean()
-        sma200_plot = df_plot['SMA_200'].dropna().iloc[-200:]
+        df_raw['SMA_200'] = df_raw['Close'].rolling(window=200).mean()
+        sma200_plot = df_raw['SMA_200'].dropna().iloc[-200:]  # last 200 valid points
         fig, ax = plt.subplots(figsize=(15, 5))
-        ax.plot(df_plot['Close'], label='Close Price', color='blue', alpha=0.4)
-        ax.plot(sma200_plot, label="200-Day SMA", color='green')
+        ax.plot(sma200_plot.index, sma200_plot, label="200-Day SMA", color='green')
         ax.set_title(f"{stock_symbol} - 200-Day Simple Moving Average", fontsize=15)
         ax.set_ylabel('Price', fontsize=12)
         ax.set_xlabel('Date', fontsize=12)
@@ -508,6 +429,7 @@ with tab4:
     if df_ml.empty:
         st.error("Not enough data after feature engineering. Select a larger date range.")
     else:
+        # Updated feature list with all new technical indicators
         features = df_ml[[
             'Return', 'SMA_10', 'SMA_50', 'EMA_10', 'Volatility', 'Momentum',
             'Lag1', 'Lag2', 'Lag3',
@@ -515,26 +437,53 @@ with tab4:
         ]]
         target = df_ml['Target']
 
-        # Deepcopy fresh models for each run
-        models = copy.deepcopy(MODELS)
-
-        # Time-series cross-validation
+        # ---- Time-aware cross-validation (TimeSeriesSplit) ----
         tscv = TimeSeriesSplit(n_splits=5)
+
+        # Models with improved hyperparameters & class balancing
+        models = {
+            "Random Forest": RandomForestClassifier(
+                n_estimators=500,            # more trees = more stable
+                max_depth=6,                # shallower = less overfit
+                min_samples_leaf=20,        # prevents memorising
+                max_features='sqrt',
+                class_weight='balanced',
+                random_state=50,
+                n_jobs=-1),
+            "Gradient Boosting": GradientBoostingClassifier(
+                n_estimators=200,
+                learning_rate=0.05,
+                max_depth=5,
+                random_state=50),
+            "XGBoost": xgb.XGBClassifier(
+                n_estimators=300,
+                max_depth=4,
+                learning_rate=0.03,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                min_child_weight=10,
+                eval_metric='logloss',
+                random_state=50),
+            "Decision Tree": DecisionTreeClassifier(
+                max_depth=6,
+                class_weight='balanced',
+                random_state=50)
+        }
+
+        # Cross-validate and collect scores
         cv_scores = {name: [] for name in models}
+        for train_idx, test_idx in tscv.split(features):
+            X_tr, X_te = features.iloc[train_idx], features.iloc[test_idx]
+            y_tr, y_te = target.iloc[train_idx], target.iloc[test_idx]
 
-        with st.spinner("Training models and computing predictions..."):
-            for train_idx, test_idx in tscv.split(features):
-                X_tr, X_te = features.iloc[train_idx], features.iloc[test_idx]
-                y_tr, y_te = target.iloc[train_idx], target.iloc[test_idx]
+            scaler = StandardScaler()
+            X_tr_s = scaler.fit_transform(X_tr)
+            X_te_s = scaler.transform(X_te)
 
-                scaler = StandardScaler()
-                X_tr_s = scaler.fit_transform(X_tr)
-                X_te_s = scaler.transform(X_te)
-
-                for name, model in models.items():
-                    model.fit(X_tr_s, y_tr)
-                    score = accuracy_score(y_te, model.predict(X_te_s))
-                    cv_scores[name].append(score)
+            for name, model in models.items():
+                model.fit(X_tr_s, y_tr)
+                score = accuracy_score(y_te, model.predict(X_te_s))
+                cv_scores[name].append(score)
 
         st.subheader("Cross‑Validation Results (5‑fold)")
         for name, scores in cv_scores.items():
@@ -542,7 +491,8 @@ with tab4:
             std  = np.std(scores) * 100
             st.write(f"{name}: {mean:.1f}% ± {std:.1f}%")
 
-        # Retrain on full data for evaluation & ensemble
+        # ---- Retrain on full data for final ensemble & next‑day prediction ----
+        # Use a simple time‑split for final evaluation (70/30)
         split = int(len(features) * 0.7)
         X_train, X_test = features[:split], features[split:]
         y_train, y_test = target[:split], target[split:]
@@ -551,9 +501,11 @@ with tab4:
         X_train_scaled = scaler_full.fit_transform(X_train)
         X_test_scaled = scaler_full.transform(X_test)
 
+        # Train all models on full training set
         for name, model in models.items():
             model.fit(X_train_scaled, y_train)
 
+        # Ensemble via average probability
         probs = []
         model_accuracies = {}
         for name, model in models.items():
@@ -566,9 +518,9 @@ with tab4:
         final_preds = (avg_prob > 0.5).astype(int)
         ensemble_acc = accuracy_score(y_test, final_preds) * 100
 
-        # Baseline comparison
-        baseline = target.mean() * 100
-        baseline = max(baseline, 100 - baseline)
+        # ---- Baseline comparison & confidence metrics ----
+        baseline = target.mean() * 100  # how often stock goes up
+        baseline = max(baseline, 100 - baseline)  # flip if it mostly goes down
 
         col1, col2, col3 = st.columns(3)
         col1.metric("Ensemble Accuracy", f"{ensemble_acc:.1f}%")
@@ -583,6 +535,7 @@ with tab4:
             col3.metric("Edge over baseline", f"{beat:.1f}%", delta="No edge — check features",
                         delta_color="inverse")
 
+        # Class balance warning
         up_pct = target.mean() * 100
         if up_pct > 65 or up_pct < 35:
             st.warning(f"⚠️ Imbalanced data: stock went UP {up_pct:.0f}% of days. "
@@ -602,26 +555,12 @@ with tab4:
                 ax.text(j, i, format(cm[i, j], 'd'), ha="center", va="center", color="black")
         st.pyplot(fig)
 
-        # Rolling accuracy chart
-        st.subheader("Model Consistency Over Time")
-        results_df = pd.DataFrame({'Actual': y_test.values, 'Predicted': final_preds})
-        results_df['Correct'] = (results_df['Actual'] == results_df['Predicted'])
-        results_df['Correct_int'] = results_df['Correct'].astype(int)
-        rolling_acc = results_df['Correct_int'].rolling(30).mean() * 100
-        fig, ax = plt.subplots(figsize=(15, 3))
-        ax.plot(rolling_acc, color='steelblue', label='30-day rolling accuracy')
-        ax.axhline(50, color='red', linestyle='--', alpha=0.5, label='Random (50%)')
-        ax.axhline(baseline, color='orange', linestyle='--', alpha=0.5, label=f'Baseline ({baseline:.0f}%)')
-        ax.set_ylabel('Accuracy %'); ax.set_ylim(30, 80)
-        ax.legend(); ax.set_title("Rolling 30-day model accuracy")
-        st.pyplot(fig)
-
-        # Individual model accuracies
+        # Individual model accuracy dropdown
         st.subheader("Individual Model Accuracies")
         selected_model_name = st.selectbox("Select Model", list(models.keys()))
         st.write(f"{selected_model_name} Accuracy: {model_accuracies[selected_model_name]:.2f}%")
 
-        # Feature importance
+        # ---- Feature Importance Chart ----
         st.subheader("What the model actually learned")
         rf_model = models["Random Forest"]
         importances = pd.Series(
@@ -637,82 +576,60 @@ with tab4:
         plt.xticks(rotation=30, ha='right')
         st.pyplot(fig)
 
-        # Next day prediction with confidence threshold
+        # ---- Next day prediction (ensemble) ----
         latest_features = scaler_full.transform(features.iloc[-1:].values)
         latest_probs = [m.predict_proba(latest_features)[0][1] for m in models.values()]
         final_up_prob = np.mean(latest_probs)
 
         st.subheader("Next Day Prediction")
-        CONFIDENCE_THRESHOLD = 0.60
-        if final_up_prob >= CONFIDENCE_THRESHOLD:
-            st.success(f"📈 UP — {final_up_prob*100:.1f}% confidence")
-        elif final_up_prob <= (1 - CONFIDENCE_THRESHOLD):
-            st.error(f"📉 DOWN — {(1-final_up_prob)*100:.1f}% confidence")
+        if final_up_prob > 0.5:
+            st.success(f"UP ({final_up_prob*100:.2f}% probability)")
         else:
-            st.warning(f"⚠️ No clear signal — model is {final_up_prob*100:.1f}% towards UP. "
-                       f"Wait for a stronger signal before acting.")
-        st.progress(int(final_up_prob * 100))
+            st.error(f"DOWN ({(1-final_up_prob)*100:.2f}% probability)")
 
-        # Disclaimer
-        st.markdown("---")
-        st.caption(
-            "⚠️ DISCLAIMER: These predictions are generated by machine learning models "
-            "trained on historical price data. They do not constitute financial advice. "
-            "Past performance does not guarantee future results. Always do your own "
-            "research before making investment decisions. MarketMantra is a decision "
-            "support tool, not a trading system."
-        )
-
-# ---------- Tab 5: ROI Calculator ----------
-with tab5:
+with tab5: #ROI CALC
     st.subheader("Advanced Investment Analytics")
 
     roi_start_date = st.date_input(
         "Investment Start Date",
         pd.to_datetime("2016-01-01"),
-        key="roi_start"
-    )
+        key="roi_start")
+    
     investment_amount = st.number_input(
         "Investment Amount (₹)",
         min_value=1000,
         value=100000,
-        step=1000
-    )
-
+        step=1000)
+    
     if st.button("Calculate Advanced ROI"):
-        with st.spinner("Fetching market data and computing ROI..."):
-            result = calculate_advanced_roi(stock_symbol, roi_start_date, investment_amount)
-
+        result = calculate_advanced_roi(stock_symbol, roi_start_date, investment_amount)
         if result:
+            # ---- Metrics Row 1 ----
             col1, col2, col3 = st.columns(3)
             col1.metric("Final Value", f"₹{result['Final Value']:,.0f}")
             col2.metric("Total Return", f"{result['Total Return %']:.2f}%")
             col3.metric("CAGR", f"{result['CAGR %']:.2f}%")
-
+    
+            # ---- Metrics Row 2 ----
             col4, col5 = st.columns(2)
             col4.metric("Volatility", f"{result['Volatility %']:.2f}%")
             col5.metric("Sharpe Ratio", f"{result['Sharpe Ratio']:.2f}")
-
+    
+            # ---- Stock Growth Chart ----
             st.subheader("Investment Growth Over Time")
-            stock_df = get_stock_data(
-                stock_symbol,
-                roi_start_date.strftime('%Y-%m-%d'),
-                datetime.now().date().strftime('%Y-%m-%d')
-            )
-            if stock_df.empty:
-                st.error("Could not fetch data. Check ticker symbol.")
-            else:
-                close_series = get_close_series(stock_df)
-                normalized = close_series / close_series.iloc[0]
-                investment_growth = normalized * investment_amount
+    
+            stock_df = yf.download(stock_symbol, start=roi_start_date)
+    
+            normalized_price = stock_df['Close'] / stock_df['Close'].iloc[0]
+            investment_growth = normalized_price * investment_amount
+    
+            fig, ax = plt.subplots(figsize=(12,5))
+            ax.plot(investment_growth, label=f"{stock_symbol} Investment Value")
+            ax.set_ylabel("Portfolio Value (₹)")
+            ax.legend()
 
-                fig, ax = plt.subplots(figsize=(12,5))
-                ax.plot(investment_growth, label=f"{stock_symbol} Investment Value")
-                ax.set_ylabel("Portfolio Value (₹)")
-                ax.set_xlabel("Date")
-                ax.legend()
-                st.pyplot(fig)
+        st.pyplot(fig)
 
 # ---- Footer ----
 st.markdown("---")
-st.caption("MarketMantra – combining technical analysis with machine learning for smarter trading decisions.")
+st.caption("MarketMantra – combining technical analysis with machine learning for smarter trading decisions.")ons.")
