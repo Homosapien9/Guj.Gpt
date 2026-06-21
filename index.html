@@ -1,0 +1,506 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS | Digital Night Market</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --bg-dark: #050505;
+            --surface: #0f0f15;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+        }
+        
+        * {
+            -webkit-font-smoothing: antialiased;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        .font-display {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Particle background */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 50%, rgba(0, 243, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.15) 0%, transparent 50%);
+        }
+        
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            to { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+        
+        /* Glassmorphism cards */
+        .glass-card {
+            background: rgba(15, 15, 21, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 243, 255, 0.2);
+            border-color: var(--neon-cyan);
+        }
+        
+        /* Tilt effect */
+        .tilt-card {
+            transition: transform 0.1s ease;
+        }
+        
+        .tilt-card:hover {
+            transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+        }
+        
+        /* Glitch text effect */
+        .glitch-text {
+            position: relative;
+            color: var(--neon-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
+        
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+        }
+        
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -1px 0 var(--neon-magenta);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -1px 0 var(--neon-cyan);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim {
+            0%, 100% { clip: rect(24px, 550px, 90px, 0); }
+            20% { clip: rect(85px, 550px, 140px, 0); }
+            40% { clip: rect(10px, 550px, 60px, 0); }
+            60% { clip: rect(80px, 550px, 120px, 0); }
+            80% { clip: rect(40px, 550px, 90px, 0); }
+        }
+        
+        @keyframes glitch-anim-2 {
+            0%, 100% { clip: rect(85px, 550px, 140px, 0); }
+            20% { clip: rect(10px, 550px, 60px, 0); }
+            40% { clip: rect(80px, 550px, 120px, 0); }
+            60% { clip: rect(24px, 550px, 90px, 0); }
+            80% { clip: rect(40px, 550px, 90px, 0); }
+        }
+        
+        /* Typewriter effect */
+        .typewriter {
+            overflow: hidden;
+            border-right: 3px solid var(--neon-cyan);
+            white-space: nowrap;
+            margin: 0 auto;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--neon-cyan) }
+        }
+        
+        /* Glowing button */
+        .glow-btn {
+            position: relative;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+            background-size: 200% auto;
+            transition: all 0.4s ease;
+        }
+        
+        .glow-btn:hover {
+            background-position: right center;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.6), 0 0 30px rgba(255, 0, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .glow-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Timeline */
+        .timeline-item {
+            position: relative;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-magenta));
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item:last-child::before {
+            height: 50%;
+        }
+        
+        /* System override mode */
+        .system-override {
+            filter: invert(1) hue-rotate(180deg);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        /* Scroll fade-in */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .fade-in.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-magenta));
+            border-radius: 4px;
+        }
+        
+        /* Neon terminal */
+        .terminal {
+            background: #0a0a0f;
+            border: 1px solid var(--neon-cyan);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .terminal::before {
+            content: '● ● ●';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            letter-spacing: 4px;
+            color: var(--neon-cyan);
+        }
+        
+        /* Floating animation for elements */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float-slow {
+            animation: float-slow 6s ease-in-out infinite;
+        }
+        
+        /* Hover tilt for cards */
+        .tilt-effect {
+            transition: transform 0.3s ease;
+            transform-style: preserve-3d;
+        }
+        
+        .tilt-effect:hover {
+            transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <!-- Particle Background -->
+    <div id="particles"></div>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-card border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center cursor-pointer" onclick="toggleSystemOverride()">
+                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mr-3">
+                        <span class="text-white font-bold text-xl">N</span>
+                    </div>
+                    <span class="font-display font-bold text-2xl tracking-wider glitch-text" data-text="NEXUS">NEXUS</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#hero" class="text-gray-300 hover:text-cyan-400 transition-colors font-medium">HOME</a>
+                    <a href="#scanner" class="text-gray-300 hover:text-cyan-400 transition-colors font-medium">SCANNER</a>
+                    <a href="#memories" class="text-gray-300 hover:text-cyan-400 transition-colors font-medium">MEMORIES</a>
+                    <a href="#how-it-works" class="text-gray-300 hover:text-cyan-400 transition-colors font-medium">HOW IT WORKS</a>
+                    <a href="#testimonials" class="text-gray-300 hover:text-cyan-400 transition-colors font-medium">TESTIMONIALS</a>
+                </div>
+                <button class="glow-btn px-6 py-2 rounded-full font-medium text-white">
+                    CONNECT WALLET
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-cyan-900/20 to-transparent z-0"></div>
+        
+        <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
+            <div class="mb-4 flex justify-center space-x-2">
+                <span class="px-3 py-1 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-sm font-mono">
+                    v2.4.1-ALPHA
+                </span>
+                <span class="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-sm font-mono">
+                    QUANTUM READY
+                </span>
+            </div>
+            
+            <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
+                <div class="text-white mb-2">DIGITAL NIGHT</div>
+                <div class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 pb-2">
+                    MARKETPLACE
+                </div>
+            </h1>
+            
+            <div class="typewriter inline-block text-xl md:text-2xl font-mono text-cyan-400 mb-8 h-8">
+                ACQUIRING MEMORIES FROM THE VOID...
+            </div>
+            
+            <p class="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+                Where fragmented consciousness fragments converge into collectible digital artifacts. 
+                Trade, treasure, and transcend your ephemeral existence in the neon-lit bazaar of tomorrow.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="glow-btn px-8 py-4 rounded-full font-bold text-white text-lg">
+                    SCAN FOR MEMORIES
+                </button>
+                <button class="px-8 py-4 rounded-full font-bold text-white border border-white/20 hover:bg-white/5 transition-all backdrop-blur-sm">
+                    VIEW CATALOGUE
+                </button>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </section>
+    
+    <!-- Memory Scanner Section -->
+    <section id="scanner" class="py-20 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 fade-in">
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                    <span class="text-white">MEMORY</span>
+                    <span class="text-cyan-400"> SCANNER</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                    Upload any thought, feeling, or fragment. Our quantum scanner will weave it into a poetic memory artifact.
+                </p>
+            </div>
+            
+            <div class="glass-card rounded-xl p-8 md:p-12 relative overflow-hidden fade-in">
+                <div class="absolute top-0 right-0 p-4">
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <label class="block text-cyan-400 font-mono text-sm mb-2">INPUT STREAM:</label>
+                    <textarea id="memoryInput" 
+                              class="w-full bg-black/50 border border-cyan-500/30 text-cyan-300 font-mono p-4 rounded-lg focus:outline-none focus:border-cyan-400 focus:shadow-glow-cyan h-32 resize-none"
+                              placeholder="Type your memory here..."></textarea>
+                </div>
+                
+                <button onclick="scanMemory()" 
+                        class="w-full glow-btn px-6 py-4 rounded-lg font-bold text-white mb-8 hover:shadow-lg hover:shadow-cyan-500/50 transition-all">
+                    EXECUTE SCANNING PROTOCOL
+                </button>
+                
+                <div id="scanResult" 
+                     class="hidden opacity-0 transform translate-y-4 transition-all duration-500 glass-card rounded-lg p-6 bg-gradient-to-br from-cyan-900/20 to-purple-900/20 border border-cyan-500/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-cyan-400 font-mono text-sm">MEMORY ANALYSIS COMPLETE</span>
+                        <span id="scanTime" class="text-gray-500 font-mono text-xs"></span>
+                    </div>
+                    <div id="poeticOutput" class="text-gray-300 font-light leading-relaxed text-lg">
+                        <!-- Poetic output will appear here -->
+                    </div>
+                    <div class="mt-6 flex items-center justify-center space-x-4">
+                        <button onclick="copyResult()" class="text-cyan-400 hover:text-cyan-300 transition-colors">
+                            <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            COPY
+                        </button>
+                        <button onclick="shareResult()" class="text-purple-400 hover:text-purple-300 transition-colors">
+                            <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.271 1.74l-.548-.268m-5.53 7.888a2 2 0 100-4 2 2 0 000 4zm0 0c1.233 0 2.13-1.195 1.593-2.203C12.815 9.017 11.468 8 10 8c-1.468 0-2.815 1.017-3.277 2.42M9 6.684v-.268c0-.497.396-.901.893-.903a3 3 0 013.268 0c.496.002.893.406.893.903v.268"></path>
+                            </svg>
+                            SHARE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Featured Memories Section -->
+    <section id="memories" class="py-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                    <span class="text-white">FEATURED</span>
+                    <span class="text-purple-400"> MEMORIES</span>
+                </h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                    Curated fragments of collective consciousness, handcrafted for the discerning collector.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Memory Card 1 -->
+                <div class="glass-card rounded-xl overflow-hidden tilt-card fade-in">
+                    <div class="h-48 bg-gradient-to-br from-cyan-900/50 to-blue-900/50 relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-20 h-20 text-cyan-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 rounded text-xs font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">RARE</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-display font-bold text-xl">AURORAL WHISPER</h3>
+                            <span class="text-cyan-400 font-mono text-sm">#001</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4 leading-relaxed">
+                            A glimpse of dawn through fractured quantum glass. The first light caught in neural nets.
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-gray-500 font-mono">CREATED: 2026-03-15</div>
+                            <button class="text-cyan-400 hover:text-cyan-300 transition-colors">
+                                ACQUIRE →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Memory Card 2 -->
+                <div class="glass-card rounded-xl overflow-hidden tilt-card fade-in" style="animation-delay: 0.1s;">
+                    <div class="h-48 bg-gradient-to-br from-purple-900/50 to-pink-900/50 relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-20 h-20 text-purple-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0 4v2m0-4h4m-4 0h4"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 rounded text-xs font-mono bg-purple-500/20 text-purple-400 border border-purple-500/30">LIMITED</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-display font-bold text-xl">GLITCH REVERIE</h3>
+                            <span class="text-purple-400 font-mono text-sm">#042</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4 leading-relaxed">
+                            The echo of corrupted data. A perfect memory of imperfection, deliberately broken.
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-gray-500 font-mono">CREATED: 2026-02-28</div>
+                            <button class="text-purple-400 hover:text-purple-300 transition-colors">
+                                ACQUIRE →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Memory Card 3 -->
+                <div class="glass-card rounded-xl overflow-hidden tilt-card fade-in" style="animation-delay: 0.2s;">
+                    <div class="h-48 bg-gradient-to-br from-green-900/50 to-cyan-900/50 relative">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-20 h-20 text-green-500/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                            </svg>
+                        </div>
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 rounded text-xs font-mono bg-green-500/20 text-green-400 border border-green-500/30">NEW</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="font-display font-bold text-xl">HYDRAULIC DREAM</h3>
+                            <span class="text-green-400 font-mono text-sm">#078</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4 leading-relaxed">
+                            The pulse of synthetic oceans beneath neon tides. Where code meets liquid light.
+                        </p>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-gray-500 font-mono">CREATED: 2026-04-01</div>
+                            <button class="text-green-400 hover:text-green-300 transition-colors">
+                                ACQUIRE →
+                            </button>
+                        </div>
